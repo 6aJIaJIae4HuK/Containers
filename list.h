@@ -8,6 +8,7 @@ namespace
 template<class T>
 struct ListNode
 {
+	ListNode() : val(T()), next(nullptr), prev(nullptr) {}
 	ListNode(const T& val) : val(val), next(nullptr), prev(nullptr) {}
 	~ListNode() = default;
 	T val;
@@ -15,44 +16,61 @@ struct ListNode
 	ListNode<T> *prev;
 };
 
-template<class T, bool IsReverse = false>
+template<class T>
 class ListIterator
 {
 public:
+	typedef std::bidirectional_iterator_tag iterator_category;
+	typedef T value_type;
+	typedef T* pointer;
+	typedef T& reference;
+	typedef std::ptrdiff_t difference_type;
+
 	ListIterator() : m_item(nullptr) {}
-	ListIterator(const ListIterator<T, IsReverse>& it)
+	ListIterator(const ListIterator<T>& it)
 	{
 		m_item = it.m_item;
 	}
-	ListIterator& operator=(const ListIterator<T, IsReverse>& it)
+	ListIterator& operator=(const ListIterator<T>& it)
 	{
 		m_item = it.m_item;
 		return *this;
 	}
 
-	bool operator!=(const ListIterator<T, IsReverse>& it) const
+	bool operator==(const ListIterator<T>& it) const
+	{
+		return m_item == it.m_item;
+	}
+
+	bool operator!=(const ListIterator<T>& it) const
 	{
 		return m_item != it.m_item;
 	}
 
 	ListIterator& operator++()
 	{
-		if (IsReverse)
-			m_item = m_item->prev;
-		else
-			m_item = m_item->next;
+		m_item = m_item->next;
 		return *this;
 	}
 
 	ListIterator& operator--()
 	{
-		if (IsReverse)
-			m_item = m_item->next;
-		else
-			m_item = m_item->prev;
+		m_item = m_item->prev;
 		return *this;
 	}
-	
+
+	ListIterator& operator++(int)
+	{
+		++(*this);
+		return *this;
+	}
+
+	ListIterator& operator--(int)
+	{
+		--(*this);
+		return *this;
+	}
+
 	T& operator*()
 	{
 		return m_item->val;
@@ -98,11 +116,15 @@ class list
 public:
 	typedef T value_type;
 	typedef ::ListIterator<T> iterator;
-	typedef ::ListIterator<T, true> reverse_iterator;
+	typedef std::reverse_iterator<iterator> reverse_iterator;
 	typedef const ::ListIterator<T>& const_iterator;
-	typedef const ::ListIterator<T, true>& const_reverse_iterator;
+	typedef std::reverse_iterator<iterator> const_reverse_iterator;
 	typedef size_t size_type;
-	explicit list() : m_end(iterator()), m_rend(reverse_iterator()), m_size(0) {}
+	explicit list() : m_size(0) 
+	{
+		m_end.getNode() = new ListNode<value_type>();
+		m_begin = m_end;
+	}
 	
 	~list()
 	{
@@ -124,21 +146,14 @@ public:
 
 	void push_back(const value_type& value)
 	{
-		if (m_rbegin.getNode() == nullptr)
-		{
-			ListNode<value_type> *node = new ListNode<value_type>(value);
+		ListNode<value_type> *node = new ListNode<value_type>(value);
+		node->next = m_end.getNode();
+		node->prev = m_end.getNode()->prev;
+		if (node->prev != nullptr)
+			node->prev->next = node;
+		m_end.getNode()->prev = node;
+		if (empty())
 			m_begin.getNode() = node;
-			m_rbegin.getNode() = node;
-		}
-		else
-		{
-			ListNode<value_type> *node = new ListNode<value_type>(value);
-			iterator it;
-			m_rbegin.getNode()->next = node;
-			node->prev = m_rbegin.getNode();
-			it.getNode() = node;
-			m_rbegin.getNode() = it.getNode();
-		}
 		m_size++;
 	}
 
@@ -184,22 +199,22 @@ public:
 
 	reverse_iterator rbegin() noexcept
 	{
-		return m_rbegin;
+		return reverse_iterator(end());
 	}
 
 	const_reverse_iterator rbegin() const noexcept
 	{
-		return m_rbegin;
+		return reverse_iterator(end());
 	}
 
 	reverse_iterator rend() noexcept
 	{
-		return m_rend;
+		return reverse_iterator(begin());
 	}
 
 	const_reverse_iterator rend() const noexcept
 	{
-		return m_rend;
+		return reverse_iterator(begin());
 	}
 
 	size_type size() const noexcept
@@ -219,9 +234,7 @@ public:
 
 private:
 	iterator m_begin;
-	reverse_iterator m_rbegin;
 	iterator m_end;
-	reverse_iterator m_rend;
 	size_type m_size;
 };
 
