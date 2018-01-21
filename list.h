@@ -20,17 +20,17 @@ class ListIterator
 {
 public:
 	ListIterator() : m_item(nullptr) {}
-	ListIterator(const ListIterator<T>& it) 
+	ListIterator(const ListIterator<T, IsReverse>& it)
 	{
 		m_item = it.m_item;
 	}
-	ListIterator& operator=(const ListIterator<T>& it) 
+	ListIterator& operator=(const ListIterator<T, IsReverse>& it)
 	{
 		m_item = it.m_item;
 		return *this;
 	}
 
-	bool operator!=(const ListIterator<T>& it) const
+	bool operator!=(const ListIterator<T, IsReverse>& it) const
 	{
 		return m_item != it.m_item;
 	}
@@ -96,14 +96,17 @@ template<class T>
 class list
 {
 public:
+	typedef T value_type;
 	typedef ::ListIterator<T> iterator;
 	typedef ::ListIterator<T, true> reverse_iterator;
+	typedef const ::ListIterator<T>& const_iterator;
+	typedef const ::ListIterator<T, true>& const_reverse_iterator;
 	typedef size_t size_type;
 	explicit list() : m_end(iterator()), m_rend(reverse_iterator()), m_size(0) {}
 	
 	~list()
 	{
-		ListNode<T> *cur = m_begin.getNode();
+		ListNode<value_type> *cur = m_begin.getNode();
 		while (cur != nullptr)
 		{
 			if (cur->next == nullptr)
@@ -119,17 +122,17 @@ public:
 		}
 	}
 
-	void push_back(const T& value)
+	void push_back(const value_type& value)
 	{
 		if (m_rbegin.getNode() == nullptr)
 		{
-			ListNode<T> *node = new ListNode<T>(value);
+			ListNode<value_type> *node = new ListNode<value_type>(value);
 			m_begin.getNode() = node;
 			m_rbegin.getNode() = node;
 		}
 		else
 		{
-			ListNode<T> *node = new ListNode<T>(value);
+			ListNode<value_type> *node = new ListNode<value_type>(value);
 			iterator it;
 			m_rbegin.getNode()->next = node;
 			node->prev = m_rbegin.getNode();
@@ -139,34 +142,79 @@ public:
 		m_size++;
 	}
 
-	T& front()
+	value_type& front()
 	{
 		return *m_begin;
 	}
 
-	T& back()
+	const value_type& front() const
+	{
+		return *m_begin;
+	}
+
+	value_type& back()
 	{
 		return *m_rbegin;
 	}
 
-	iterator begin()
+	const value_type& back() const
+	{
+		return *m_rbegin;
+	}
+
+	iterator begin() noexcept
 	{
 		return m_begin;
 	}
 
-	iterator end()
+	const_iterator begin() const noexcept
+	{
+		return m_begin;
+	}
+
+	iterator end() noexcept
 	{
 		return m_end;
 	}
 
-	size_type size() const
+	const_iterator end() const noexcept
+	{
+		return m_end;
+	}
+
+	reverse_iterator rbegin() noexcept
+	{
+		return m_rbegin;
+	}
+
+	const_reverse_iterator rbegin() const noexcept
+	{
+		return m_rbegin;
+	}
+
+	reverse_iterator rend() noexcept
+	{
+		return m_rend;
+	}
+
+	const_reverse_iterator rend() const noexcept
+	{
+		return m_rend;
+	}
+
+	size_type size() const noexcept
 	{
 		return m_size;
 	}
 
-	bool empty() const
+	size_type max_size() const noexcept
 	{
-		return m_size == 0;
+		return std::numeric_limits<size_type>::max();
+	}
+
+	bool empty() const noexcept
+	{
+		return begin() == end();
 	}
 
 private:
