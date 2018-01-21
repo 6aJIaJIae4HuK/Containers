@@ -187,12 +187,22 @@ public:
 		return m_begin;
 	}
 
+	const_iterator cbegin() const noexcept
+	{
+		return m_begin;
+	}
+
 	iterator end() noexcept
 	{
 		return m_end;
 	}
 
 	const_iterator end() const noexcept
+	{
+		return m_end;
+	}
+
+	const_iterator cend() const noexcept
 	{
 		return m_end;
 	}
@@ -207,12 +217,22 @@ public:
 		return reverse_iterator(end());
 	}
 
+	const_reverse_iterator crbegin() const noexcept
+	{
+		return reverse_iterator(end());
+	}
+
 	reverse_iterator rend() noexcept
 	{
 		return reverse_iterator(begin());
 	}
 
 	const_reverse_iterator rend() const noexcept
+	{
+		return reverse_iterator(begin());
+	}
+
+	const_reverse_iterator crend() const noexcept
 	{
 		return reverse_iterator(begin());
 	}
