@@ -2,8 +2,8 @@
 
 #include <memory>
 
-//namespace
-//{
+namespace
+{
 
 template<class T>
 struct ListNode
@@ -15,7 +15,7 @@ struct ListNode
 	ListNode<T> *prev;
 };
 
-template<class T>
+template<class T, bool IsReverse = false>
 class ListIterator
 {
 public:
@@ -37,7 +37,19 @@ public:
 
 	ListIterator& operator++()
 	{
-		m_item = m_item->next;
+		if (IsReverse)
+			m_item = m_item->prev;
+		else
+			m_item = m_item->next;
+		return *this;
+	}
+
+	ListIterator& operator--()
+	{
+		if (IsReverse)
+			m_item = m_item->next;
+		else
+			m_item = m_item->prev;
 		return *this;
 	}
 	
@@ -75,7 +87,7 @@ private:
 	ListNode<T> *m_item;
 };
 
-//}
+}
 
 namespace blk
 {
@@ -85,8 +97,9 @@ class list
 {
 public:
 	typedef ::ListIterator<T> iterator;
-
-	explicit list() : m_end(ListIterator<T>()), m_rend(ListIterator<T>()) {}
+	typedef ::ListIterator<T, true> reverse_iterator;
+	typedef size_t size_type;
+	explicit list() : m_end(iterator()), m_rend(reverse_iterator()), m_size(0) {}
 	
 	~list()
 	{
@@ -111,19 +124,19 @@ public:
 		if (m_rbegin.getNode() == nullptr)
 		{
 			ListNode<T> *node = new ListNode<T>(value);
-			ListIterator<T> it;
-			it.getNode() = node;
-			m_begin = m_rbegin = it;
+			m_begin.getNode() = node;
+			m_rbegin.getNode() = node;
 		}
 		else
 		{
 			ListNode<T> *node = new ListNode<T>(value);
-			ListIterator<T> it;
+			iterator it;
 			m_rbegin.getNode()->next = node;
 			node->prev = m_rbegin.getNode();
 			it.getNode() = node;
-			m_rbegin = it;
+			m_rbegin.getNode() = it.getNode();
 		}
+		m_size++;
 	}
 
 	T& front()
@@ -146,11 +159,22 @@ public:
 		return m_end;
 	}
 
+	size_type size() const
+	{
+		return m_size;
+	}
+
+	bool empty() const
+	{
+		return m_size == 0;
+	}
+
 private:
 	iterator m_begin;
-	iterator m_rbegin;
+	reverse_iterator m_rbegin;
 	iterator m_end;
-	iterator m_rend;
+	reverse_iterator m_rend;
+	size_type m_size;
 };
 
 }
