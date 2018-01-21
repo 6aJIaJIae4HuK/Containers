@@ -159,22 +159,22 @@ public:
 
 	value_type& front()
 	{
-		return *m_begin;
+		return *begin();
 	}
 
 	const value_type& front() const
 	{
-		return *m_begin;
+		return *begin();
 	}
 
 	value_type& back()
 	{
-		return *m_rbegin;
+		return *rbegin();
 	}
 
 	const value_type& back() const
 	{
-		return *m_rbegin;
+		return *rbegin();
 	}
 
 	iterator begin() noexcept
