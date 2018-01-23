@@ -59,16 +59,18 @@ public:
 		return *this;
 	}
 
-	ListIterator& operator++(int)
+	ListIterator operator++(int)
 	{
-		++(*this);
-		return *this;
+		ListIterator<value_type> res = *this;
+		this->operator++();
+		return res;
 	}
 
-	ListIterator& operator--(int)
+	ListIterator operator--(int)
 	{
-		--(*this);
-		return *this;
+		ListIterator<value_type> res = *this;
+		this->operator--();
+		return res;
 	}
 
 	value_type& operator*()
