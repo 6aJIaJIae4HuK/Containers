@@ -20,29 +20,29 @@ template<class T>
 class ListIterator
 {
 public:
-	typedef std::bidirectional_iterator_tag iterator_category;
-	typedef T value_type;
-	typedef T* pointer;
-	typedef T& reference;
-	typedef std::ptrdiff_t difference_type;
+	using iterator_category = std::bidirectional_iterator_tag;
+	using value_type = T;
+	using pointer = T*;
+	using reference = T&;
+	using difference_type = std::ptrdiff_t;
 
 	ListIterator() : m_item(nullptr) {}
-	ListIterator(const ListIterator<T>& it)
+	ListIterator(const ListIterator<value_type>& it)
 	{
 		m_item = it.m_item;
 	}
-	ListIterator& operator=(const ListIterator<T>& it)
+	ListIterator& operator=(const ListIterator<value_type>& it)
 	{
 		m_item = it.m_item;
 		return *this;
 	}
 
-	bool operator==(const ListIterator<T>& it) const
+	bool operator==(const ListIterator<value_type>& it) const
 	{
 		return m_item == it.m_item;
 	}
 
-	bool operator!=(const ListIterator<T>& it) const
+	bool operator!=(const ListIterator<value_type>& it) const
 	{
 		return m_item != it.m_item;
 	}
@@ -71,32 +71,32 @@ public:
 		return *this;
 	}
 
-	T& operator*()
+	value_type& operator*()
 	{
 		return m_item->val;
 	}
 	
-	const T& operator*() const
+	const value_type& operator*() const
 	{
 		return m_item->val;
 	}
 
-	T *operator->()
+	value_type *operator->()
 	{
 		return &m_item->val;
 	}
 
-	const T *operator->() const
+	const value_type *operator->() const
 	{
 		return &m_item->val;
 	}
 
-	ListNode<T> *&getNode()
+	ListNode<value_type> *&getNode()
 	{
 		return m_item;
 	}
 
-	const ListNode<T> *&getNode() const
+	const ListNode<value_type> *&getNode() const
 	{
 		return m_item;
 	}
@@ -114,12 +114,13 @@ template<class T>
 class list
 {
 public:
-	typedef T value_type;
-	typedef ::ListIterator<T> iterator;
-	typedef std::reverse_iterator<iterator> reverse_iterator;
-	typedef const ::ListIterator<T>& const_iterator;
-	typedef std::reverse_iterator<iterator> const_reverse_iterator;
-	typedef size_t size_type;
+	using value_type = T;
+	using iterator = ::ListIterator<value_type>;
+	using reverse_iterator = std::reverse_iterator<iterator>;
+	using const_iterator = const iterator&;
+	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+	using size_type = size_t;
+
 	explicit list() : m_size(0) 
 	{
 		m_end.getNode() = new ListNode<value_type>();
