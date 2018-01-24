@@ -8,7 +8,6 @@ namespace
 template<class T>
 struct ListNode
 {
-	ListNode() : val(T()), next(nullptr), prev(nullptr) {}
 	ListNode(const T& val) : val(val), next(nullptr), prev(nullptr) {}
 	~ListNode() = default;
 	T val;
@@ -98,11 +97,11 @@ public:
 		return m_item;
 	}
 
-	const ListNode<value_type> *&getNode() const
+	ListNode<value_type> *getNode() const
 	{
 		return m_item;
 	}
-	
+
 private:
 	ListNode<T> *m_item;
 };
@@ -112,52 +111,82 @@ private:
 namespace blk
 {
 
-template<class T>
+template<class T, class Allocator = std::allocator<T>>
 class list
 {
 public:
 	using value_type = T;
+	using allocator_type = Allocator;
+	using real_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<::ListNode<T>>;
 	using iterator = ::ListIterator<value_type>;
 	using reverse_iterator = std::reverse_iterator<iterator>;
 	using const_iterator = const iterator&;
 	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 	using size_type = size_t;
 
-	explicit list() : m_size(0) 
+	explicit list(const Allocator& alloc = Allocator()) : 
+		m_begin(iterator()),
+		m_end(iterator()),
+		m_size(0),
+		m_fake_alloc(alloc),
+		m_alloc(real_allocator_type())
 	{
-		m_end.getNode() = new ListNode<value_type>();
+		m_end.getNode() = allocateNode(nullptr, nullptr);
 		m_begin = m_end;
 	}
 	
 	~list()
 	{
-		ListNode<value_type> *cur = m_begin.getNode();
-		while (cur != nullptr)
-		{
-			if (cur->next == nullptr)
-			{
-				delete cur;
-				cur = nullptr;
-			}
-			else
-			{
-				cur = cur->next;
-				delete cur->prev;
-			}
-		}
+		clear();
+	}
+
+	iterator insert(iterator pos, const value_type& value)
+	{
+		::ListNode<value_type> *node = allocateNode(pos.getNode()->prev, pos.getNode());
+		node->val = value;
+		if (node->prev != nullptr)
+			node->prev->next = node;
+		pos.getNode()->prev = node;
+		iterator it;
+		it.getNode() = node;
+		if (empty())
+			m_begin = it;
+		m_size++;
+		return it;
+	}
+
+	iterator erase(const_iterator pos)
+	{
+		iterator res = pos;
+		++res;
+		pos.getNode()->next->prev = pos.getNode()->prev; //pos can't be end()
+		if (pos.getNode()->prev != nullptr)
+			pos.getNode()->prev->next = pos.getNode()->next;
+		auto node = pos.getNode();
+		if (node == begin().getNode())
+			m_begin = res;
+		m_alloc.deallocate(node, 1);
+		m_size--;
+		return res;
+	}
+
+	iterator erase(const_iterator first, const_iterator last)
+	{
+		iterator cur = first;
+		while (cur != last)
+			cur = erase(cur);
+		return cur;
+	}
+
+	void clear() noexcept
+	{
+		erase(begin(), end());
+		m_alloc.deallocate(m_end.getNode(), 1);
 	}
 
 	void push_back(const value_type& value)
 	{
-		ListNode<value_type> *node = new ListNode<value_type>(value);
-		node->next = m_end.getNode();
-		node->prev = m_end.getNode()->prev;
-		if (node->prev != nullptr)
-			node->prev->next = node;
-		m_end.getNode()->prev = node;
-		if (empty())
-			m_begin.getNode() = node;
-		m_size++;
+		insert(end(), value);
 	}
 
 	value_type& front()
@@ -256,9 +285,20 @@ public:
 	}
 
 private:
+	::ListNode<value_type>* allocateNode(::ListNode<value_type>* prev, ::ListNode<value_type>* next)
+	{
+		::ListNode<value_type> *res = m_alloc.allocate(1);
+		res->next = next;
+		res->prev = prev;
+		return res;
+	}
+
+	allocator_type m_fake_alloc;
+	real_allocator_type m_alloc;
 	iterator m_begin;
 	iterator m_end;
 	size_type m_size;
+
 };
 
 }
