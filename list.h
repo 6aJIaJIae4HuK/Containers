@@ -120,7 +120,7 @@ public:
 	using real_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<::ListNode<T>>;
 	using iterator = ::ListIterator<value_type>;
 	using reverse_iterator = std::reverse_iterator<iterator>;
-	using const_iterator = const iterator&;
+	using const_iterator = const iterator;
 	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 	using size_type = size_t;
 
@@ -149,7 +149,7 @@ public:
 		pos.getNode()->prev = node;
 		iterator it;
 		it.getNode() = node;
-		if (empty())
+		if (begin() == pos)
 			m_begin = it;
 		m_size++;
 		return it;
