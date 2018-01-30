@@ -9,7 +9,6 @@ template<class T>
 struct ListNode
 {
 	ListNode(const T& val) : val(val), next(nullptr), prev(nullptr) {}
-	~ListNode() = default;
 	T val;
 	ListNode<T> *next;
 	ListNode<T> *prev;
@@ -26,6 +25,7 @@ public:
 	using difference_type = std::ptrdiff_t;
 
 	ListIterator() : m_item(nullptr) {}
+
 	ListIterator(const ListIterator<value_type>& it)
 	{
 		m_item = it.m_item;
@@ -35,6 +35,8 @@ public:
 		m_item = it.m_item;
 		return *this;
 	}
+
+	explicit ListIterator(ListNode<value_type>* node) : m_item(node) {}
 
 	bool operator==(const ListIterator<value_type>& it) const
 	{
@@ -125,15 +127,12 @@ public:
 	using size_type = size_t;
 
 	explicit list(const Allocator& alloc = Allocator()) : 
-		m_begin(iterator()),
-		m_end(iterator()),
+		m_headNode(allocateNode(nullptr, nullptr)),
 		m_size(0),
 		m_fake_alloc(alloc),
 		m_alloc(real_allocator_type())
 	{
-		m_end.getNode() = allocateNode(nullptr, nullptr);
-		m_end.getNode()->next = m_end.getNode()->prev = m_end.getNode();
-		m_begin = m_end;
+		m_headNode->prev = m_headNode->next = m_headNode;
 	}
 	
 	~list()
@@ -141,33 +140,41 @@ public:
 		clear();
 	}
 
-	iterator insert(iterator pos, const value_type& value)
+	iterator insert(const_iterator pos, const value_type& value)
 	{
-		::ListNode<value_type> *node = allocateNode(pos.getNode()->prev, pos.getNode());
+		::ListNode<value_type> *node = insertNode(pos.getNode()->prev, pos.getNode());
 		node->val = value;
-		if (node->prev != nullptr)
-			node->prev->next = node;
-		pos.getNode()->prev = node;
-		iterator it;
-		it.getNode() = node;
-		if (begin() == pos)
-			m_begin = it;
 		m_size++;
-		return it;
+		return iterator(node);
+	}
+
+	template<class... Args>
+	iterator emplace(const_iterator pos, Args&&... args)
+	{
+		::ListNode<value_type> *node = insertNode(pos.getNode()->prev, pos.getNode());
+		node->val = std::forward<value_type>(args...);
+		m_size++;
+		return iterator(node);
+	}
+
+	template<class... Args>
+	iterator emplace_back(Args&&... args)
+	{
+		return emplace<Args...>(end(), args...);
+	}
+
+	template<class... Args>
+	iterator emplace_front(Args&&... args)
+	{
+		return emplace<Args...>(begin(), args...);
 	}
 
 	iterator erase(const_iterator pos)
 	{
-		iterator res = pos;
-		++res;
-		pos.getNode()->next->prev = pos.getNode()->prev; //pos can't be end()
-		if (pos.getNode()->prev != nullptr)
-			pos.getNode()->prev->next = pos.getNode()->next;
-		auto node = pos.getNode();
-		if (node == begin().getNode())
-			m_begin = res;
-		m_alloc.deallocate(node, 1);
-		m_size--;
+		pos.getNode()->prev->next = pos.getNode()->next;
+		pos.getNode()->next->prev = pos.getNode()->prev;
+		iterator res(pos.getNode()->next);
+		m_alloc.deallocate(pos.getNode(), 1);
 		return res;
 	}
 
@@ -182,7 +189,7 @@ public:
 	void clear() noexcept
 	{
 		erase(begin(), end());
-		m_alloc.deallocate(m_end.getNode(), 1);
+		m_alloc.deallocate(m_headNode, 1);
 	}
 
 	void push_back(const value_type& value)
@@ -212,32 +219,32 @@ public:
 
 	iterator begin() noexcept
 	{
-		return m_begin;
+		return iterator(m_headNode->next);
 	}
 
 	const_iterator begin() const noexcept
 	{
-		return m_begin;
+		return iterator(m_headNode->next);
 	}
 
 	const_iterator cbegin() const noexcept
 	{
-		return m_begin;
+		return iterator(m_headNode->next);
 	}
 
 	iterator end() noexcept
 	{
-		return m_end;
+		return iterator(m_headNode);
 	}
 
 	const_iterator end() const noexcept
 	{
-		return m_end;
+		return iterator(m_headNode);
 	}
 
 	const_iterator cend() const noexcept
 	{
-		return m_end;
+		return iterator(m_headNode);
 	}
 
 	reverse_iterator rbegin() noexcept
@@ -294,10 +301,17 @@ private:
 		return res;
 	}
 
+	::ListNode<value_type>* insertNode(::ListNode<value_type>* prev, ::ListNode<value_type>* next)
+	{
+		::ListNode<value_type> *node = allocateNode(prev, next);
+		node->prev->next = node;
+		node->next->prev = node;
+		return node;
+	}
+
 	allocator_type m_fake_alloc;
 	real_allocator_type m_alloc;
-	iterator m_begin;
-	iterator m_end;
+	::ListNode<value_type>* m_headNode;
 	size_type m_size;
 
 };
