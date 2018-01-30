@@ -132,6 +132,7 @@ public:
 		m_alloc(real_allocator_type())
 	{
 		m_end.getNode() = allocateNode(nullptr, nullptr);
+		m_end.getNode()->next = m_end.getNode()->prev = m_end.getNode();
 		m_begin = m_end;
 	}
 	
