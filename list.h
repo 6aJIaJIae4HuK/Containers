@@ -148,6 +148,32 @@ public:
 		return iterator(node);
 	}
 
+	iterator insert(const_iterator pos, value_type&& value)
+	{
+		return emplace(pos, std::forward<value_type>(value));
+	}
+
+	iterator insert(const_iterator pos, size_type count, value_type&& value)
+	{
+		iterator res = pos;
+		while (count > 0)
+		{
+			res = insert(res, value);
+			count--;
+		}
+		return res;
+	}
+
+	void push_front(const value_type& value)
+	{
+		insert(begin(), value);
+	}
+
+	void push_back(const value_type& value)
+	{
+		insert(end(), value);
+	}
+
 	template<class... Args>
 	iterator emplace(const_iterator pos, Args&&... args)
 	{
@@ -190,11 +216,6 @@ public:
 	{
 		erase(begin(), end());
 		m_alloc.deallocate(m_headNode, 1);
-	}
-
-	void push_back(const value_type& value)
-	{
-		insert(end(), value);
 	}
 
 	value_type& front()
