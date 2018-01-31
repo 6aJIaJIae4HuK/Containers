@@ -125,6 +125,11 @@ public:
 	using const_iterator = const iterator;
 	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 	using size_type = size_t;
+	using reference = value_type&;
+	using const_reference = const value_type&;
+	using pointer = typename std::allocator_traits<Allocator>::pointer;
+	using const_pointer = typename std::allocator_traits<Allocator>::const_pointer;
+	using difference_type = std::ptrdiff_t;
 
 	explicit list(const Allocator& alloc = Allocator()) : 
 		m_headNode(allocateNode(nullptr, nullptr)),
