@@ -189,15 +189,15 @@ public:
 	}
 
 	template<class... Args>
-	iterator emplace_back(Args&&... args)
+	reference emplace_back(Args&&... args)
 	{
-		return emplace<Args...>(end(), args...);
+		return *emplace<Args...>(end(), args...);
 	}
 
 	template<class... Args>
-	iterator emplace_front(Args&&... args)
+	reference emplace_front(Args&&... args)
 	{
-		return emplace<Args...>(begin(), args...);
+		return *emplace<Args...>(begin(), args...);
 	}
 
 	iterator erase(const_iterator pos)
@@ -221,6 +221,34 @@ public:
 	{
 		erase(begin(), end());
 		m_alloc.deallocate(m_headNode, 1);
+	}
+
+	void pop_back()
+	{
+		erase(--end());
+	}
+
+	void pop_front()
+	{
+		erase(begin());
+	}
+
+	void remove(const value_type& value)
+	{
+		remove_if([&value](const value_type& v) { return value == v; });
+	}
+
+	template<class UnaryPredicate>
+	void remove_if(UnaryPredicate p)
+	{
+		iterator cur = begin();
+		while (cur != end())
+		{
+			if (p(*cur))
+				cur = erase(cur);
+			else
+				++cur;
+		}
 	}
 
 	value_type& front()

@@ -84,4 +84,28 @@ BOOST_AUTO_TEST_CASE(iterate_range_list_test)
 	BOOST_CHECK(sum == (num * (num - 1)) / 2);
 }
 
+BOOST_AUTO_TEST_CASE(remove_test)
+{
+	blk::list<int> list;
+	list.push_back(1);
+	list.push_back(3);
+	list.push_back(1);
+	list.push_back(2);
+	list.push_back(1);
+	list.remove(1);
+	BOOST_CHECK(*list.begin() == 3 && *list.rbegin() == 2);
+}
+
+BOOST_AUTO_TEST_CASE(remove_predicate_test)
+{
+	blk::list<int> list;
+	list.push_back(1);
+	list.push_back(3);
+	list.push_back(1);
+	list.push_back(2);
+	list.push_back(1);
+	list.remove_if([](int n) { return n == 1; });
+	BOOST_CHECK(*list.begin() == 3 && *list.rbegin() == 2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
