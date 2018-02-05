@@ -35,6 +35,14 @@ model {
 		}
 		
 	}	
+
+	binaries {
+		all {
+			if (toolChain in Gcc) {
+				cppCompiler.args "-std=c++14"
+			}
+		}
+	}
 }
 
 task wrapper(type: Wrapper) {
