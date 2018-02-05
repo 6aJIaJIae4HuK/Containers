@@ -1,7 +1,7 @@
 //#define BOOST_TEST_NO_LIB
 #include <boost/test/unit_test.hpp>
 
-#include "../list.h"
+#include "../include/list.h"
 
 BOOST_AUTO_TEST_SUITE(list)
 

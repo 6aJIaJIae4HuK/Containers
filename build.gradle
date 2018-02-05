@@ -1,0 +1,38 @@
+apply plugin: 'cpp'
+
+model {
+	toolChains {
+		//visualCpp(VisualCpp)
+		gcc(Gcc)
+	}
+	
+	components {
+		
+		containers(NativeLibrarySpec) {
+			sources {
+				cpp {
+					source.srcDirs = ['include']
+				}
+			}
+		}
+		
+		
+		main(NativeExecutableSpec) {
+			sources {
+				cpp {
+					source.srcDirs = ['src']
+				}
+			}
+		}
+		
+		
+		test(NativeExecutableSpec) {
+			sources {
+				cpp {
+					source.srcDirs = ['tests']
+				}
+			}
+		}
+		
+	}	
+}
