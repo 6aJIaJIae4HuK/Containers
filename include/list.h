@@ -46,7 +46,7 @@ public:
 
 	bool operator!=(const ListIterator<value_type>& it) const
 	{
-		return m_item != it.m_item;
+		return !(*this == it);
 	}
 
 	ListIterator& operator++()
@@ -132,13 +132,34 @@ public:
 	using const_pointer = typename std::allocator_traits<Allocator>::const_pointer;
 	using difference_type = std::ptrdiff_t;
 
-	explicit list(const Allocator& alloc = Allocator()) : 
-		m_headNode(allocateNode(nullptr, nullptr)),
+	list() : 
+		list(Allocator()) {}
+	
+	explicit list(const Allocator& alloc) : 
+		m_headNode(allocateHeadNode()),
 		m_size(0),
 		m_fake_alloc(alloc),
-		m_alloc(real_allocator_type())
+		m_alloc(real_allocator_type()) {}
+	
+	list(size_type count, const value_type& value, const Allocator& alloc = Allocator()) : 
+		list(alloc)
 	{
-		m_headNode->prev = m_headNode->next = m_headNode;
+		while (count > 0)
+		{
+			push_back(value);
+			count--;
+		}
+	}
+	
+	explicit list(size_type count, const Allocator& alloc = Allocator()) :
+		list(count, value_type(), alloc) {}
+		
+	template<class InputIt>
+	list(InputIt first, InputIt last, const Allocator& alloc = Allocator()) :
+		list(alloc)
+	{
+		for (auto it = first; it != last; it++)
+			push_back(*it);
 	}
 	
 	~list()
@@ -146,6 +167,11 @@ public:
 		clear();
 	}
 
+	allocator_type get_allocator() const
+	{
+		return m_fake_alloc;
+	}
+	
 	iterator insert(const_iterator pos, const value_type& value)
 	{
 		::ListNode<value_type> *node = insertNode(pos.getNode()->prev, pos.getNode());
@@ -159,7 +185,7 @@ public:
 		return emplace(pos, std::forward<value_type>(value));
 	}
 
-	iterator insert(const_iterator pos, size_type count, value_type&& value)
+	iterator insert(const_iterator pos, size_type count, const value_type& value)
 	{
 		iterator res = pos;
 		while (count > 0)
@@ -167,6 +193,15 @@ public:
 			res = insert(res, value);
 			count--;
 		}
+		return res;
+	}
+	
+	template<class InputIt>
+	iterator insert(const_iterator pos, InputIt first, InputIt last)
+	{
+		iterator res = pos;
+		for (auto it = first; it != last; it++)
+			res = insert(res, *it);
 		return res;
 	}
 
@@ -184,7 +219,7 @@ public:
 	iterator emplace(const_iterator pos, Args&&... args)
 	{
 		::ListNode<value_type> *node = insertNode(pos.getNode()->prev, pos.getNode());
-		node->val = std::forward<value_type>(args...);
+		new (&node->val) value_type (std::forward<Args>(args)...);
 		m_size++;
 		return iterator(node);
 	}
@@ -206,6 +241,7 @@ public:
 		pos.getNode()->prev->next = pos.getNode()->next;
 		pos.getNode()->next->prev = pos.getNode()->prev;
 		iterator res(pos.getNode()->next);
+		pos.getNode()->val.~value_type();
 		m_alloc.deallocate(pos.getNode(), 1);
 		return res;
 	}
@@ -344,7 +380,7 @@ public:
 
 	bool empty() const noexcept
 	{
-		return begin() == end();
+		return m_size == 0;
 	}
 
 private:
@@ -353,6 +389,13 @@ private:
 		::ListNode<value_type> *res = m_alloc.allocate(1);
 		res->next = next;
 		res->prev = prev;
+		return res;
+	}
+	
+	::ListNode<value_type>* allocateHeadNode()
+	{
+		::ListNode<value_type> *res = allocateNode(nullptr, nullptr);
+		res->next = res->prev = res;
 		return res;
 	}
 

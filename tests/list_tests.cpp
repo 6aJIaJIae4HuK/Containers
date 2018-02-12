@@ -5,6 +5,29 @@
 
 BOOST_AUTO_TEST_SUITE(list)
 
+struct TestStruct
+{
+	TestStruct() = delete;
+	TestStruct(int i) :
+		m_ptr(new int(i)) {}
+	TestStruct(const TestStruct& other) :
+		m_ptr(other.m_ptr ? new int(*other.m_ptr) : nullptr) {}
+		
+	TestStruct& operator=(const TestStruct& other)
+	{
+		delete m_ptr;
+		m_ptr = other.m_ptr ? new int(*other.m_ptr) : nullptr;
+		return *this;
+	}
+	
+	~TestStruct()
+	{
+		delete m_ptr;
+	}
+	
+	int* m_ptr = nullptr;
+};
+
 BOOST_AUTO_TEST_CASE(empty_list)
 {
 	blk::list<int> list;
@@ -44,13 +67,13 @@ BOOST_AUTO_TEST_CASE(iterate_list_test)
 	int num = 10;
 	int cnt = 0;
 	int sum = 0;
-	blk::list<int> list;
+	blk::list<TestStruct> list;
 	for (int i = 0; i < num; i++)
 		list.insert(list.end(), i);
 	for (auto it = list.begin(); it != list.end(); ++it)
 	{
 		cnt++;
-		sum += *it;
+		sum += *it->m_ptr;
 	}
 	BOOST_CHECK(cnt == num);
 	BOOST_CHECK(sum == (num * (num - 1)) / 2);
@@ -60,7 +83,7 @@ BOOST_AUTO_TEST_CASE(iterate_list_test)
 	for (auto it = list.rbegin(); it != list.rend(); ++it)
 	{
 		cnt++;
-		sum += *it;
+		sum += *it->m_ptr;
 	}
 	BOOST_CHECK(cnt == num);
 	BOOST_CHECK(sum == (num * (num - 1)) / 2);
