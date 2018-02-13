@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(insert_test)
 	blk::list<int> list;
 	list.insert(list.end(), 2);
 	list.insert(list.begin(), 1);
-	::ListIterator<int> it = list.insert(list.end(), 3);
+	blk::list<int>::iterator it = list.insert(list.end(), 3);
 	BOOST_CHECK(*it == 3);
 	BOOST_CHECK(*list.begin() == 1);
 	BOOST_CHECK(*list.rbegin() == 3);

@@ -15,36 +15,38 @@ struct ListNode
 	ListNode<T> *prev;
 };
 
-template<class T>
+template<class T, bool IsConst = false>
 class ListIterator
 {
 public:
 	using iterator_category = std::bidirectional_iterator_tag;
 	using value_type = T;
-	using pointer = T*;
-	using reference = T&;
+	using pointer = typename std::conditional<IsConst, const T*, T*>::type;
+	using reference = typename std::conditional<IsConst, const T&, T&>::type;
 	using difference_type = std::ptrdiff_t;
 
 	ListIterator() : m_item(nullptr) {}
 
-	ListIterator(const ListIterator<value_type>& it)
+	template<bool B>
+	ListIterator(ListIterator<value_type, B>& it) : m_item(it.getNode()) {}
+	
+	template<bool B>
+	ListIterator& operator=(const ListIterator<value_type, B>& it)
 	{
-		m_item = it.m_item;
-	}
-	ListIterator& operator=(const ListIterator<value_type>& it)
-	{
-		m_item = it.m_item;
+		m_item = it.getNode();
 		return *this;
 	}
 
 	explicit ListIterator(ListNode<value_type>* node) : m_item(node) {}
 
-	bool operator==(const ListIterator<value_type>& it) const
+	template<bool B>
+	bool operator==(const ListIterator<value_type, B>& it) const
 	{
 		return m_item == it.m_item;
 	}
 
-	bool operator!=(const ListIterator<value_type>& it) const
+	template<bool B>
+	bool operator!=(const ListIterator<value_type, B>& it) const
 	{
 		return !(*this == it);
 	}
@@ -63,34 +65,38 @@ public:
 
 	ListIterator operator++(int)
 	{
-		ListIterator<value_type> res = *this;
+		ListIterator res = *this;
 		this->operator++();
 		return res;
 	}
 
 	ListIterator operator--(int)
 	{
-		ListIterator<value_type> res = *this;
+		ListIterator res = *this;
 		this->operator--();
 		return res;
 	}
-
-	value_type& operator*()
+	
+	template<bool B = IsConst>
+	typename std::enable_if<!B, reference>::type operator*()
 	{
 		return m_item->val;
 	}
 	
-	const value_type& operator*() const
+	template<bool B = IsConst>
+	typename std::enable_if<B, reference>::type operator*() const
 	{
 		return m_item->val;
 	}
 
-	value_type *operator->()
+	template<bool B = IsConst>
+	typename std::enable_if<!B, pointer>::type operator->()
 	{
 		return &m_item->val;
 	}
 
-	const value_type *operator->() const
+	template<bool B = IsConst>
+	typename std::enable_if<B, pointer>::type operator->() const
 	{
 		return &m_item->val;
 	}
@@ -100,11 +106,11 @@ public:
 		return m_item;
 	}
 
-	ListNode<value_type> *getNode() const
+	const ListNode<value_type> *getNode() const
 	{
 		return m_item;
 	}
-
+	
 private:
 	ListNode<T> *m_item;
 };
@@ -123,7 +129,7 @@ public:
 	using real_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<::ListNode<T>>;
 	using iterator = ::ListIterator<value_type>;
 	using reverse_iterator = std::reverse_iterator<iterator>;
-	using const_iterator = const iterator;
+	using const_iterator = ::ListIterator<value_type, true>;
 	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 	using size_type = size_t;
 	using reference = value_type&;
@@ -165,6 +171,7 @@ public:
 	~list()
 	{
 		clear();
+		m_alloc.deallocate(m_headNode, 1);
 	}
 
 	allocator_type get_allocator() const
@@ -248,16 +255,24 @@ public:
 
 	iterator erase(const_iterator first, const_iterator last)
 	{
-		iterator cur = first;
-		while (cur != last)
-			cur = erase(cur);
-		return cur;
+		if (first == begin() && last == end())
+		{
+			clear();
+			return end();
+		}
+		else
+		{
+			while (first != last)
+				first = erase(first);
+			return first;
+		}
 	}
 
 	void clear() noexcept
 	{
-		erase(begin(), end());
-		m_alloc.deallocate(m_headNode, 1);
+		auto it = begin();
+		while (it != end())
+			it = erase(it);
 	}
 
 	void pop_back()
