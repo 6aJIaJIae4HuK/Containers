@@ -27,9 +27,12 @@ public:
 
 	ListIterator() : m_item(nullptr) {}
 
-	template<bool B>
-	ListIterator(ListIterator<value_type, B>& it) : m_item(it.getNode()) {}
+	ListIterator(const ListIterator<value_type, IsConst>& it) : m_item(it.m_item) {}
+	ListIterator(ListIterator<value_type, !IsConst>& it) : m_item(it.getNode()) {}
 	
+	template<bool B>	
+	ListIterator(ListIterator<value_type, B>&& it) : m_item(it.getNode()) {}
+
 	template<bool B>
 	ListIterator& operator=(const ListIterator<value_type, B>& it)
 	{
