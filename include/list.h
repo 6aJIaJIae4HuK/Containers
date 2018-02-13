@@ -28,10 +28,7 @@ public:
 	ListIterator() : m_item(nullptr) {}
 
 	ListIterator(const ListIterator<value_type, IsConst>& it) : m_item(it.m_item) {}
-	ListIterator(ListIterator<value_type, !IsConst>& it) : m_item(it.getNode()) {}
-	
-	template<bool B>	
-	ListIterator(ListIterator<value_type, B>&& it) : m_item(it.getNode()) {}
+	ListIterator(const ListIterator<value_type, !IsConst>& it) : m_item(it.getNode()) {}
 
 	template<bool B>
 	ListIterator& operator=(const ListIterator<value_type, B>& it)
@@ -104,12 +101,12 @@ public:
 		return &m_item->val;
 	}
 
-	ListNode<value_type> *&getNode()
+	ListNode<value_type> *getNode()
 	{
 		return m_item;
 	}
-
-	const ListNode<value_type> *getNode() const
+	
+	ListNode<value_type> * const getNode() const
 	{
 		return m_item;
 	}
@@ -192,7 +189,7 @@ public:
 
 	iterator insert(const_iterator pos, value_type&& value)
 	{
-		return emplace(pos, std::forward<value_type>(value));
+		return emplace(pos, std::move(value));
 	}
 
 	iterator insert(const_iterator pos, size_type count, const value_type& value)
