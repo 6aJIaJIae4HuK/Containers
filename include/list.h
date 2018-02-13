@@ -330,12 +330,12 @@ public:
 
 	const_iterator begin() const noexcept
 	{
-		return iterator(m_headNode->next);
+		return const_iterator(m_headNode->next);
 	}
 
 	const_iterator cbegin() const noexcept
 	{
-		return iterator(m_headNode->next);
+		return const_iterator(m_headNode->next);
 	}
 
 	iterator end() noexcept
@@ -345,12 +345,12 @@ public:
 
 	const_iterator end() const noexcept
 	{
-		return iterator(m_headNode);
+		return const_iterator(m_headNode);
 	}
 
 	const_iterator cend() const noexcept
 	{
-		return iterator(m_headNode);
+		return const_iterator(m_headNode);
 	}
 
 	reverse_iterator rbegin() noexcept
@@ -360,12 +360,12 @@ public:
 
 	const_reverse_iterator rbegin() const noexcept
 	{
-		return reverse_iterator(end());
+		return const_reverse_iterator(end());
 	}
 
 	const_reverse_iterator crbegin() const noexcept
 	{
-		return reverse_iterator(end());
+		return const_reverse_iterator(end());
 	}
 
 	reverse_iterator rend() noexcept
@@ -375,12 +375,12 @@ public:
 
 	const_reverse_iterator rend() const noexcept
 	{
-		return reverse_iterator(begin());
+		return const_reverse_iterator(begin());
 	}
 
 	const_reverse_iterator crend() const noexcept
 	{
-		return reverse_iterator(begin());
+		return const_reverse_iterator(begin());
 	}
 
 	size_type size() const noexcept
