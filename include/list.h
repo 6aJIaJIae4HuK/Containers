@@ -126,7 +126,7 @@ class list
 public:
 	using value_type = T;
 	using allocator_type = Allocator;
-	using real_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<::ListNode<T>>;
+	using node_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<::ListNode<T>>;
 	using iterator = ::ListIterator<value_type>;
 	using reverse_iterator = std::reverse_iterator<iterator>;
 	using const_iterator = ::ListIterator<value_type, true>;
@@ -144,8 +144,8 @@ public:
 	explicit list(const Allocator& alloc) : 
 		m_headNode(allocateHeadNode()),
 		m_size(0),
-		m_fake_alloc(alloc),
-		m_alloc(real_allocator_type()) {}
+		m_value_alloc(alloc),
+		m_alloc(node_allocator_type()) {}
 	
 	list(size_type count, const value_type& value, const Allocator& alloc = Allocator()) : 
 		list(alloc)
@@ -176,7 +176,7 @@ public:
 
 	allocator_type get_allocator() const
 	{
-		return m_fake_alloc;
+		return m_value_alloc;
 	}
 	
 	iterator insert(const_iterator pos, const value_type& value)
@@ -194,13 +194,12 @@ public:
 
 	iterator insert(const_iterator pos, size_type count, const value_type& value)
 	{
-		iterator res = pos;
 		while (count > 0)
 		{
-			res = insert(res, value);
+			pos = insert(pos, value);
 			count--;
 		}
-		return res;
+		return pos;
 	}
 	
 	template<class InputIt>
@@ -248,8 +247,7 @@ public:
 		pos.getNode()->prev->next = pos.getNode()->next;
 		pos.getNode()->next->prev = pos.getNode()->prev;
 		iterator res(pos.getNode()->next);
-		pos.getNode()->val.~value_type();
-		m_alloc.deallocate(pos.getNode(), 1);
+		destroyNode(pos.getNode());
 		return res;
 	}
 
@@ -270,9 +268,10 @@ public:
 
 	void clear() noexcept
 	{
-		auto it = begin();
-		while (it != end())
-			it = erase(it);
+		m_size = 0;
+		::ListNode<value_type>* node = m_headNode->next;
+		while (node != m_headNode)
+			node = destroyNode(node);
 	}
 
 	void pop_back()
@@ -421,9 +420,17 @@ private:
 		node->next->prev = node;
 		return node;
 	}
-
-	allocator_type m_fake_alloc;
-	real_allocator_type m_alloc;
+	
+	::ListNode<value_type>* destroyNode(::ListNode<value_type>* node)
+	{
+		std::allocator_traits<allocator_type>::destroy<value_type>(m_value_alloc, &node->val);
+		::ListNode<value_type>* res = node->next;
+		m_alloc.deallocate(node, 1);
+		return res;
+	}
+	
+	allocator_type m_value_alloc;
+	node_allocator_type m_alloc;
 	::ListNode<value_type>* m_headNode;
 	size_type m_size;
 
