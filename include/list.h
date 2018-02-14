@@ -423,7 +423,7 @@ private:
 	
 	::ListNode<value_type>* destroyNode(::ListNode<value_type>* node)
 	{
-		std::allocator_traits<allocator_type>::destroy<value_type>(m_value_alloc, &node->val);
+		std::allocator_traits<allocator_type>::destroy(m_value_alloc, &node->val);
 		::ListNode<value_type>* res = node->next;
 		m_alloc.deallocate(node, 1);
 		return res;
