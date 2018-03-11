@@ -168,6 +168,42 @@ public:
 			push_back(*it);
 	}
 	
+	list(const list& other, const Allocator& alloc = 
+			std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.getAllocator())) :
+		list(alloc) 
+	{
+		for (auto it = other.begin(); it != other.end(); it++)
+			push_back(*it);
+	}
+	
+	list(list&& other)
+	{
+		m_headNode = move(other.m_headNode);
+		m_value_alloc = move(other.m_value_alloc);
+		m_alloc = move(other.m_alloc);
+		m_size = move(other.m_size);
+	}
+
+	list(list&& other, const Allocator& alloc)
+	{
+		if (alloc == other.getAllocator())
+		{
+			m_headNode = move(other.m_headNode);
+			m_value_alloc = move(other.m_value_alloc);
+			m_alloc = move(other.m_alloc);
+			m_size = move(other.m_size);
+		}
+		else
+		{
+			m_alloc = alloc;
+			m_value_alloc = node_allocator_type();
+			m_headNode = allocateHeadNode();
+			m_size = 0;
+			for (auto it = other.begin(); it != other.end(); it++)
+				emplace_back(move(*it));
+		}
+	}
+	
 	~list()
 	{
 		clear();
@@ -225,7 +261,7 @@ public:
 	iterator emplace(const_iterator pos, Args&&... args)
 	{
 		::ListNode<value_type> *node = insertNode(pos.getNode()->prev, pos.getNode());
-		new (&node->val) value_type (std::forward<Args>(args)...);
+		std::allocator_traits<allocator_type>::construct(m_value_alloc, &node->val, std::forward<Args>(args)...);
 		m_size++;
 		return iterator(node);
 	}
