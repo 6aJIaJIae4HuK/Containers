@@ -168,14 +168,18 @@ public:
 			push_back(*it);
 	}
 	
-	list(const list& other, const Allocator& alloc = 
-			std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.getAllocator())) :
-		list(alloc) 
+	list(const list& other) :
+		list(std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.getAllocator()))
 	{
-		for (auto it = other.begin(); it != other.end(); it++)
-			push_back(*it);
+		insert(begin(), other.begin(), other.end());
 	}
-	
+
+	list(const list& other, const Allocator& alloc) :
+		list(alloc)
+	{
+		insert(begin(), other.begin(), other.end());
+	}
+
 	list(list&& other)
 	{
 		m_headNode = move(other.m_headNode);
