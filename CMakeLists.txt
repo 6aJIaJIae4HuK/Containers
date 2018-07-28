@@ -13,7 +13,7 @@ target_include_directories(containers INTERFACE ${PROJECT_SOURCE_DIR}/include)
 set(Boost_USE_STATIC_LIBS OFF)
 find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 
-file(GLOB SRC_DIRECTORY "${PROJECT_SOURCE_DIR}/tests/*.cpp")
+file(GLOB_RECURSE SRC_DIRECTORY "${PROJECT_SOURCE_DIR}/tests/*.cpp")
 add_executable(test_executable ${SRC_DIRECTORY})
 target_include_directories(test_executable PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(test_executable ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})

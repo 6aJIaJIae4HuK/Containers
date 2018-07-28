@@ -147,7 +147,7 @@ public:
 		m_value_alloc(alloc),
 		m_alloc(node_allocator_type()) {}
 	
-	list(size_type count, const value_type& value, const Allocator& alloc = Allocator()) : 
+	explicit list(size_type count, const value_type& value, const Allocator& alloc = Allocator()) : 
 		list(alloc)
 	{
 		while (count > 0)
@@ -158,9 +158,16 @@ public:
 	}
 	
 	explicit list(size_type count, const Allocator& alloc = Allocator()) :
-		list(count, value_type(), alloc) {}
+		list(alloc)
+	{
+		while (count > 0)
+		{
+			emplace_back();
+			count--;
+		}
+	}
 		
-	template<class InputIt>
+	template<class InputIt, typename std::enable_if_t<std::is_same<std::input_iterator_tag, typename std::iterator_traits<InputIt>::iterator_category>::value>>
 	list(InputIt first, InputIt last, const Allocator& alloc = Allocator()) :
 		list(alloc)
 	{
@@ -182,10 +189,10 @@ public:
 
 	list(list&& other)
 	{
-		m_headNode = move(other.m_headNode);
-		m_value_alloc = move(other.m_value_alloc);
-		m_alloc = move(other.m_alloc);
-		m_size = move(other.m_size);
+		m_headNode = std::move(other.m_headNode);
+		m_value_alloc = std::move(other.m_value_alloc);
+		m_alloc = std::move(other.m_alloc);
+		m_size = std::move(other.m_size);
 	}
 
 	list(list&& other, const Allocator& alloc)
@@ -273,7 +280,7 @@ public:
 	template<class... Args>
 	reference emplace_back(Args&&... args)
 	{
-		return *emplace<Args...>(end(), args...);
+		return *emplace<Args...>(end(), std::forward<Args>(args)...);
 	}
 
 	template<class... Args>

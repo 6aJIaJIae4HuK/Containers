@@ -1,47 +1,10 @@
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
-#include "../include/list.h"
+#include "../../include/list.h"
+#include "../test_class.h"
 
 BOOST_AUTO_TEST_SUITE(list)
-
-struct TestStruct
-{
-	TestStruct() = delete;
-	TestStruct(int i) :
-		m_ptr(new int(i)) {}
-	TestStruct(const TestStruct& other) :
-		m_ptr(other.m_ptr ? new int(*other.m_ptr) : nullptr) {}
-		
-	TestStruct& operator=(const TestStruct& other)
-	{
-		delete m_ptr;
-		m_ptr = other.m_ptr ? new int(*other.m_ptr) : nullptr;
-		return *this;
-	}
-	
-	~TestStruct()
-	{
-		delete m_ptr;
-	}
-	
-	int* m_ptr = nullptr;
-};
-
-BOOST_AUTO_TEST_CASE(empty_list)
-{
-	blk::list<int> list;
-}
-
-BOOST_AUTO_TEST_CASE(for_empty_list_begin_is_end)
-{
-	blk::list<int> list;
-	
-	BOOST_CHECK(list.begin() == list.end());
-	BOOST_CHECK(list.cbegin() == list.cend());
-	BOOST_CHECK(list.rbegin() == list.rend());
-	BOOST_CHECK(list.crbegin() == list.crend());
-}
 
 BOOST_AUTO_TEST_CASE(insert_test)
 {
@@ -67,13 +30,13 @@ BOOST_AUTO_TEST_CASE(iterate_list_test)
 	int num = 10;
 	int cnt = 0;
 	int sum = 0;
-	blk::list<TestStruct> list;
+	blk::list<TestClass> list;
 	for (int i = 0; i < num; i++)
 		list.insert(list.end(), i);
 	for (auto it = list.begin(); it != list.end(); ++it)
 	{
 		cnt++;
-		sum += *it->m_ptr;
+		sum += it->getValue();
 	}
 	BOOST_CHECK(cnt == num);
 	BOOST_CHECK(sum == (num * (num - 1)) / 2);
@@ -83,7 +46,7 @@ BOOST_AUTO_TEST_CASE(iterate_list_test)
 	for (auto it = list.rbegin(); it != list.rend(); ++it)
 	{
 		cnt++;
-		sum += *it->m_ptr;
+		sum += it->getValue();
 	}
 	BOOST_CHECK(cnt == num);
 	BOOST_CHECK(sum == (num * (num - 1)) / 2);
