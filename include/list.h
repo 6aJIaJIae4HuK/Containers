@@ -167,7 +167,7 @@ public:
 		}
 	}
 		
-	template<class InputIt, typename std::enable_if_t<std::is_same<std::input_iterator_tag, typename std::iterator_traits<InputIt>::iterator_category>::value>>
+	template<class InputIt, typename = std::enable_if<std::is_base_of_v<std::input_iterator_tag, typename std::iterator_traits<InputIt>::iterator_category>>>
 	list(InputIt first, InputIt last, const Allocator& alloc = Allocator()) :
 		list(alloc)
 	{
@@ -190,6 +190,7 @@ public:
 	list(list&& other)
 	{
 		m_headNode = std::move(other.m_headNode);
+		other.m_headNode = nullptr;
 		m_value_alloc = std::move(other.m_value_alloc);
 		m_alloc = std::move(other.m_alloc);
 		m_size = std::move(other.m_size);
@@ -200,6 +201,7 @@ public:
 		if (alloc == other.getAllocator())
 		{
 			m_headNode = move(other.m_headNode);
+			other.m_headNode = nullptr;
 			m_value_alloc = move(other.m_value_alloc);
 			m_alloc = move(other.m_alloc);
 			m_size = move(other.m_size);
@@ -212,13 +214,17 @@ public:
 			m_size = 0;
 			for (auto it = other.begin(); it != other.end(); it++)
 				emplace_back(move(*it));
+			other.m_headNode = nullptr;
 		}
 	}
 	
 	~list()
 	{
-		clear();
-		m_alloc.deallocate(m_headNode, 1);
+		if (m_headNode)
+		{
+			clear();
+			m_alloc.deallocate(m_headNode, 1);
+		}
 	}
 
 	allocator_type get_allocator() const
