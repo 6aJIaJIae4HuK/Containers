@@ -2,7 +2,7 @@ class TestClass
 {
 public:
 	TestClass() = delete;
-	TestClass(int i) :
+	explicit TestClass(int i) :
 		m_ptr(new int(i)) {}
 	TestClass(const TestClass& other)
 	{

@@ -127,7 +127,6 @@ class list
 public:
 	using value_type = T;
 	using allocator_type = Allocator;
-	using node_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<::ListNode<T>>;
 	using iterator = ::ListIterator<value_type>;
 	using reverse_iterator = std::reverse_iterator<iterator>;
 	using const_iterator = ::ListIterator<value_type, true>;
@@ -145,8 +144,7 @@ public:
 	explicit list(const Allocator& alloc) : 
 		m_headNode(allocateHeadNode()),
 		m_size(0),
-		m_value_alloc(alloc),
-		m_alloc(node_allocator_type()) {}
+		m_alloc(alloc) {}
 	
 	explicit list(size_type count, const value_type& value, const Allocator& alloc = Allocator()) : 
 		list(alloc)
@@ -192,7 +190,6 @@ public:
 	{
 		m_headNode = std::move(other.m_headNode);
 		other.m_headNode = nullptr;
-		m_value_alloc = std::move(other.m_value_alloc);
 		m_alloc = std::move(other.m_alloc);
 		m_size = std::move(other.m_size);
 	}
@@ -203,14 +200,12 @@ public:
 		{
 			m_headNode = move(other.m_headNode);
 			other.m_headNode = nullptr;
-			m_value_alloc = move(other.m_value_alloc);
 			m_alloc = move(other.m_alloc);
 			m_size = move(other.m_size);
 		}
 		else
 		{
 			m_alloc = alloc;
-			m_value_alloc = node_allocator_type();
 			m_headNode = allocateHeadNode();
 			m_size = 0;
 			for (auto it = other.begin(); it != other.end(); it++)
@@ -231,14 +226,15 @@ public:
 	{
 		if (m_headNode)
 		{
+			auto m_nodeAlloc = node_allocator_type();
 			clear();
-			m_alloc.deallocate(m_headNode, 1);
+			m_nodeAlloc.deallocate(m_headNode, 1);
 		}
 	}
 
 	allocator_type get_allocator() const
 	{
-		return m_value_alloc;
+		return m_alloc;
 	}
 	
 	iterator insert(const_iterator pos, const value_type& value)
@@ -460,9 +456,12 @@ public:
 	}
 
 private:
+	using node_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<::ListNode<T>>;
+
 	::ListNode<value_type>* allocateNode(::ListNode<value_type>* prev, ::ListNode<value_type>* next)
 	{
-		::ListNode<value_type> *res = m_alloc.allocate(1);
+		auto m_nodeAlloc = node_allocator_type();
+		::ListNode<value_type> *res = m_nodeAlloc.allocate(1);
 		res->next = next;
 		res->prev = prev;
 		return res;
@@ -485,14 +484,14 @@ private:
 	
 	::ListNode<value_type>* destroyNode(::ListNode<value_type>* node)
 	{
-		std::allocator_traits<allocator_type>::destroy(m_value_alloc, &node->val);
+		auto m_nodeAlloc = node_allocator_type();
+		node->val.~T();
 		::ListNode<value_type>* res = node->next;
-		m_alloc.deallocate(node, 1);
+		m_nodeAlloc.deallocate(node, 1);
 		return res;
 	}
 	
-	allocator_type m_value_alloc;
-	node_allocator_type m_alloc;
+	allocator_type m_alloc;
 	::ListNode<value_type>* m_headNode;
 	size_type m_size;
 

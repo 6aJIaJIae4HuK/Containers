@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(iterate_list_test)
 	int sum = 0;
 	blk::list<TestClass> list;
 	for (int i = 0; i < num; i++)
-		list.insert(list.end(), i);
+		list.insert(list.end(), TestClass(i));
 	for (auto it = list.begin(); it != list.end(); ++it)
 	{
 		cnt++;
