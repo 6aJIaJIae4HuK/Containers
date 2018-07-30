@@ -83,11 +83,11 @@ BOOST_AUTO_TEST_CASE(list_copy)
 
 BOOST_AUTO_TEST_CASE(list_from_initializer_list)
 {
-	blk::list<int> list({ 0, 1, 2, 3, 4 });
+	blk::list<TestClass> list { TestClass(0), TestClass(1), TestClass(2), TestClass(3), TestClass(4) };
 	BOOST_CHECK(list.size() == 5);
 	auto it = list.begin();
 	for (int i = 0; i < 5; i++, ++it)
-		BOOST_CHECK(*it == i);
+		BOOST_CHECK(it->getValue() == i);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

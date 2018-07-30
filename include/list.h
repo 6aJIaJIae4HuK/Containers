@@ -218,8 +218,7 @@ public:
 	list(std::initializer_list<T> init, const Allocator& alloc = Allocator()) :
 		list(alloc)
 	{
-		for (auto item : init)
-			emplace_back(item);
+		insert(begin(), init.begin(), init.end());
 	}
 
 	~list()
