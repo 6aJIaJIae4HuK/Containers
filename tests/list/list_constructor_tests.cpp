@@ -63,4 +63,31 @@ BOOST_AUTO_TEST_CASE(list_from_range)
 		BOOST_CHECK(it->getValue() == i);
 }
 
+BOOST_AUTO_TEST_CASE(list_copy)
+{
+	int n = 10;
+	blk::list<TestClass> l1;
+	for (int i = 0; i < n; i++)
+		l1.emplace_back(i);
+	blk::list<TestClass> l2(l1);
+	BOOST_CHECK(l1.size() == n);
+	BOOST_CHECK(l2.size() == n);
+	auto it1 = l1.begin();
+	auto it2 = l2.begin();
+	for (int i = 0; i < n; i++, ++it1, ++it2)
+	{
+		BOOST_CHECK(it1->getValue() == i);
+		BOOST_CHECK(it2->getValue() == i);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(list_from_initializer_list)
+{
+	blk::list<int> list({ 0, 1, 2, 3, 4 });
+	BOOST_CHECK(list.size() == 5);
+	auto it = list.begin();
+	for (int i = 0; i < 5; i++, ++it)
+		BOOST_CHECK(*it == i);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

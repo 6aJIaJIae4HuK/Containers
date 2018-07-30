@@ -10,7 +10,8 @@ public:
 	}
 
 	TestClass& operator=(const TestClass& other)
-	{ 
+	{
+		delete m_ptr;
 		assign(other);
 		return *this;
 	}

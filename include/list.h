@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <limits>
+#include <initializer_list>
 
 namespace
 {
@@ -176,7 +177,7 @@ public:
 	}
 	
 	list(const list& other) :
-		list(std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.getAllocator()))
+		list(std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator()))
 	{
 		insert(begin(), other.begin(), other.end());
 	}
@@ -198,7 +199,7 @@ public:
 
 	list(list&& other, const Allocator& alloc)
 	{
-		if (alloc == other.getAllocator())
+		if (alloc == other.get_allocator())
 		{
 			m_headNode = move(other.m_headNode);
 			other.m_headNode = nullptr;
@@ -214,10 +215,18 @@ public:
 			m_size = 0;
 			for (auto it = other.begin(); it != other.end(); it++)
 				emplace_back(move(*it));
+			other.clear();
 			other.m_headNode = nullptr;
 		}
 	}
 	
+	list(std::initializer_list<T> init, const Allocator& alloc = Allocator()) :
+		list(alloc)
+	{
+		for (auto item : init)
+			emplace_back(item);
+	}
+
 	~list()
 	{
 		if (m_headNode)
@@ -235,7 +244,7 @@ public:
 	iterator insert(const_iterator pos, const value_type& value)
 	{
 		::ListNode<value_type> *node = insertNode(pos.getNode()->prev, pos.getNode());
-		node->val = value;
+		::new (static_cast<void*>(&node->val)) T(value);
 		m_size++;
 		return iterator(node);
 	}
@@ -255,12 +264,12 @@ public:
 		return pos;
 	}
 	
-	template<class InputIt>
+	template<class InputIt, typename = std::enable_if<std::is_base_of_v<std::input_iterator_tag, typename std::iterator_traits<InputIt>::iterator_category>>>
 	iterator insert(const_iterator pos, InputIt first, InputIt last)
 	{
 		iterator res = pos;
 		for (auto it = first; it != last; it++)
-			res = insert(res, *it);
+			res = insert(pos, *it);
 		return res;
 	}
 
@@ -278,7 +287,7 @@ public:
 	iterator emplace(const_iterator pos, Args&&... args)
 	{
 		::ListNode<value_type> *node = insertNode(pos.getNode()->prev, pos.getNode());
-		std::allocator_traits<allocator_type>::construct(m_value_alloc, &node->val, std::forward<Args>(args)...);
+		::new (static_cast<void*>(&node->val)) T(std::forward<Args>(args)...);
 		m_size++;
 		return iterator(node);
 	}
