@@ -46,16 +46,16 @@ public:
 	ListIterator operator++(int);
 	ListIterator operator--(int);
 
-	template<bool B = IsConst, typename Enabled = std::enable_if<!B, reference>::type>
+	template<bool B = IsConst, typename Enabled = typename std::enable_if<!B, reference>::type>
 	Enabled operator*();
 
-	template<bool B = IsConst, typename Enabled = std::enable_if<B, reference>::type>
+	template<bool B = IsConst, typename Enabled = typename std::enable_if<B, reference>::type>
 	Enabled operator*() const;
 
-	template<bool B = IsConst, typename Enabled = std::enable_if<!B, pointer>::type>
+	template<bool B = IsConst, typename Enabled = typename std::enable_if<!B, pointer>::type>
 	Enabled operator->();
 
-	template<bool B = IsConst, typename Enabled = std::enable_if<B, pointer>::type>
+	template<bool B = IsConst, typename Enabled = typename std::enable_if<B, pointer>::type>
 	Enabled operator->() const;
 
 	ListNode<value_type> * getNode();
@@ -87,7 +87,7 @@ public:
 	explicit list(size_type count, const value_type& value, const Allocator& alloc = Allocator());
 	explicit list(size_type count, const Allocator& alloc = Allocator());
 
-	template<class InputIt, typename Enabled = std::enable_if<std::is_base_of_v<std::input_iterator_tag, typename std::iterator_traits<InputIt>::iterator_category>>>
+	template<class InputIt, typename Enabled = typename std::enable_if<std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<InputIt>::iterator_category>::value>>
 	list(InputIt first, InputIt last, const Allocator& alloc = Allocator());
 	list(const list& other);
 	list(const list& other, const Allocator& alloc);
@@ -101,7 +101,7 @@ public:
 	iterator insert(const_iterator pos, value_type&& value);
 	iterator insert(const_iterator pos, size_type count, const value_type& value);
 
-	template<class InputIt, typename Enabled = std::enable_if<std::is_base_of_v<std::input_iterator_tag, typename std::iterator_traits<InputIt>::iterator_category>>>
+	template<class InputIt, typename Enabled = typename std::enable_if<std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<InputIt>::iterator_category>::value>>
 	iterator insert(const_iterator pos, InputIt first, InputIt last);
 
 	void push_front(const value_type& value);

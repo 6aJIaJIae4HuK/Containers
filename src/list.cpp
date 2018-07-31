@@ -70,28 +70,28 @@ ListIterator<T, IsConst> ListIterator<T, IsConst>::operator--(int)
 
 template<class T, bool IsConst>
 template<bool B, typename Enabled>
-typename Enabled ListIterator<T, IsConst>::operator*()
+Enabled ListIterator<T, IsConst>::operator*()
 {
 	return m_item->val;
 }
 
 template<class T, bool IsConst>
 template<bool B, typename Enabled>
-typename Enabled ListIterator<T, IsConst>::operator*() const
+Enabled ListIterator<T, IsConst>::operator*() const
 {
 	return m_item->val;
 }
 
 template<class T, bool IsConst>
 template<bool B, typename Enabled>
-typename Enabled ListIterator<T, IsConst>::operator->()
+Enabled ListIterator<T, IsConst>::operator->()
 {
 	return &m_item->val;
 }
 
 template<class T, bool IsConst>
 template<bool B, typename Enabled>
-typename Enabled ListIterator<T, IsConst>::operator->() const
+Enabled ListIterator<T, IsConst>::operator->() const
 {
 	return &m_item->val;
 }
@@ -366,7 +366,7 @@ typename list<T, Allocator>::value_type& list<T, Allocator>::front()
 }
 
 template<class T, class Allocator>
-typename const list<T, Allocator>::value_type& list<T, Allocator>::front() const
+const typename list<T, Allocator>::value_type& list<T, Allocator>::front() const
 {
 	return *begin();
 }
@@ -378,7 +378,7 @@ typename list<T, Allocator>::value_type& list<T, Allocator>::back()
 }
 
 template<class T, class Allocator>
-typename const list<T, Allocator>::value_type& list<T, Allocator>::back() const
+const typename list<T, Allocator>::value_type& list<T, Allocator>::back() const
 {
 	return *rbegin();
 }
@@ -486,7 +486,7 @@ ListNode<typename list<T, Allocator>::value_type>* list<T, Allocator>::allocateN
 template<class T, class Allocator>
 ListNode<typename list<T, Allocator>::value_type>* list<T, Allocator>::allocateHeadNode()
 {
-	::ListNode<value_type> *res = allocateNode(nullptr, nullptr);
+	ListNode<value_type> *res = allocateNode(nullptr, nullptr);
 	res->next = res->prev = res;
 	return res;
 }
