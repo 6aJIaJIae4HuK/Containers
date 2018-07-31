@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_library(containers INTERFACE)
 
 target_include_directories(containers INTERFACE ${PROJECT_SOURCE_DIR}/include)
+target_sources(containers INTERFACE ${PROJECT_SOURCE_DIR}/src)
 
 set(Boost_USE_STATIC_LIBS OFF)
 find_package(Boost REQUIRED COMPONENTS unit_test_framework)
