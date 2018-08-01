@@ -11,6 +11,11 @@ BOOST_AUTO_TEST_CASE(empty_list)
 	blk::list<int> list;
 }
 
+BOOST_AUTO_TEST_CASE(empty_list_with_allocator)
+{
+	blk::list<TestClass, std::allocator<TestClass>> list;
+}
+
 BOOST_AUTO_TEST_CASE(for_empty_list_begin_is_end)
 {
 	blk::list<int> list;
@@ -27,8 +32,10 @@ BOOST_AUTO_TEST_CASE(list_with_n_copies)
 	int value = 1;
 	blk::list<int> list(n, value);
 	BOOST_CHECK(list.size() == n);
-	for (auto item : list)
-		BOOST_CHECK(item == value);
+	auto it = list.begin();
+	for (int i = 0; i < n; i++, ++it)
+		BOOST_CHECK(*it == value);
+	BOOST_CHECK(it == list.end());
 }
 
 BOOST_AUTO_TEST_CASE(list_with_n_default_copies)
@@ -36,18 +43,38 @@ BOOST_AUTO_TEST_CASE(list_with_n_default_copies)
 	int n = 100;
 	blk::list<int> list(n);
 	BOOST_CHECK(list.size() == n);
-	for (auto item : list)
-		BOOST_CHECK(item == int());
+	auto it = list.begin();
+	for (int i = 0; i < n; i++, ++it)
+		BOOST_CHECK(*it == int());
+	BOOST_CHECK(it == list.end());
 }
 
 BOOST_AUTO_TEST_CASE(move_list)
 {
+	int n = 10;
 	blk::list<TestClass> l1;
-	l1.emplace_back(0);
-	l1.emplace_back(1);
+	for (int i = 0; i < 10; i++)
+		l1.emplace_back(i);
 	blk::list<TestClass> l2 = std::move(l1);
-	for (auto item : l2)
-		item.getValue();
+	BOOST_CHECK(l2.size() == n);
+	auto it = l2.begin();
+	for (int i = 0; i < n; i++, ++it)
+		BOOST_CHECK(it->getValue() == i);
+	BOOST_CHECK(it == l2.end());
+}
+
+BOOST_AUTO_TEST_CASE(move_list_with_allocator)
+{
+	int n = 10;
+	blk::list<TestClass> l1;
+	for (int i = 0; i < 10; i++)
+		l1.emplace_back(i);
+	blk::list<TestClass> l2(std::move(l1), std::allocator<TestClass>());
+	BOOST_CHECK(l2.size() == n);
+	auto it = l2.begin();
+	for (int i = 0; i < n; i++, ++it)
+		BOOST_CHECK(it->getValue() == i);
+	BOOST_CHECK(it == l2.end());
 }
 
 BOOST_AUTO_TEST_CASE(list_from_range)
@@ -61,6 +88,7 @@ BOOST_AUTO_TEST_CASE(list_from_range)
 	auto it = l2.begin();
 	for (int i = 0; i < n; i++, ++it)
 		BOOST_CHECK(it->getValue() == i);
+	BOOST_CHECK(it == l2.end());
 }
 
 BOOST_AUTO_TEST_CASE(list_copy)
@@ -79,6 +107,28 @@ BOOST_AUTO_TEST_CASE(list_copy)
 		BOOST_CHECK(it1->getValue() == i);
 		BOOST_CHECK(it2->getValue() == i);
 	}
+	BOOST_CHECK(it1 == l1.end());
+	BOOST_CHECK(it2 == l2.end());
+}
+
+BOOST_AUTO_TEST_CASE(list_copy_with_allocator)
+{
+	int n = 10;
+	blk::list<TestClass> l1;
+	for (int i = 0; i < n; i++)
+		l1.emplace_back(i);
+	blk::list<TestClass> l2(l1, std::allocator<TestClass>());
+	BOOST_CHECK(l1.size() == n);
+	BOOST_CHECK(l2.size() == n);
+	auto it1 = l1.begin();
+	auto it2 = l2.begin();
+	for (int i = 0; i < n; i++, ++it1, ++it2)
+	{
+		BOOST_CHECK(it1->getValue() == i);
+		BOOST_CHECK(it2->getValue() == i);
+	}
+	BOOST_CHECK(it1 == l1.end());
+	BOOST_CHECK(it2 == l2.end());
 }
 
 BOOST_AUTO_TEST_CASE(list_from_initializer_list)
@@ -88,6 +138,7 @@ BOOST_AUTO_TEST_CASE(list_from_initializer_list)
 	auto it = list.begin();
 	for (int i = 0; i < 5; i++, ++it)
 		BOOST_CHECK(it->getValue() == i);
+	BOOST_CHECK(it == list.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

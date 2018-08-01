@@ -179,10 +179,10 @@ list<T, Allocator>::list(list&& other, const Allocator& alloc)
 {
 	if (alloc == other.get_allocator())
 	{
-		m_headNode = move(other.m_headNode);
+		m_headNode = std::move(other.m_headNode);
 		other.m_headNode = nullptr;
-		m_alloc = move(other.m_alloc);
-		m_size = move(other.m_size);
+		m_alloc = std::move(other.m_alloc);
+		m_size = std::move(other.m_size);
 	}
 	else
 	{
@@ -190,7 +190,7 @@ list<T, Allocator>::list(list&& other, const Allocator& alloc)
 		m_headNode = allocateHeadNode();
 		m_size = 0;
 		for (auto it = other.begin(); it != other.end(); it++)
-			emplace_back(move(*it));
+			emplace_back(std::move(*it));
 		other.clear();
 		other.m_headNode = nullptr;
 	}
