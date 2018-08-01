@@ -189,10 +189,8 @@ list<T, Allocator>::list(list&& other, const Allocator& alloc)
 		m_alloc = alloc;
 		m_headNode = allocateHeadNode();
 		m_size = 0;
-		for (auto it = other.begin(); it != other.end(); it++)
-			emplace_back(std::move(*it));
-		other.clear();
-		other.m_headNode = nullptr;
+		insert(begin(), other.begin(), other.end());
+		other.~list();
 	}
 }
 
@@ -211,6 +209,7 @@ list<T, Allocator>::~list()
 		auto nodeAlloc = node_allocator_type();
 		clear();
 		std::allocator_traits<node_allocator_type>::deallocate(nodeAlloc, m_headNode, 1);
+		m_headNode = nullptr;
 	}
 }
 

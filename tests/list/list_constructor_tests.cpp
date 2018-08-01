@@ -3,6 +3,7 @@
 
 #include "../../include/list.h"
 #include "../test_class.h"
+#include "../test_allocator.h"
 
 BOOST_AUTO_TEST_SUITE(list)
 
@@ -63,13 +64,27 @@ BOOST_AUTO_TEST_CASE(move_list)
 	BOOST_CHECK(it == l2.end());
 }
 
-BOOST_AUTO_TEST_CASE(move_list_with_allocator)
+BOOST_AUTO_TEST_CASE(move_list_with_same_allocator)
 {
 	int n = 10;
 	blk::list<TestClass> l1;
 	for (int i = 0; i < 10; i++)
 		l1.emplace_back(i);
 	blk::list<TestClass> l2(std::move(l1), std::allocator<TestClass>());
+	BOOST_CHECK(l2.size() == n);
+	auto it = l2.begin();
+	for (int i = 0; i < n; i++, ++it)
+		BOOST_CHECK(it->getValue() == i);
+	BOOST_CHECK(it == l2.end());
+}
+
+BOOST_AUTO_TEST_CASE(move_list_with_different_allocator)
+{
+	int n = 10;
+	blk::list<TestClass, TestAllocator<TestClass>> l1(TestAllocator<TestClass>(0));
+	for (int i = 0; i < 10; i++)
+		l1.emplace_back(i);
+	blk::list<TestClass, TestAllocator<TestClass>> l2(std::move(l1), TestAllocator<TestClass>(1));
 	BOOST_CHECK(l2.size() == n);
 	auto it = l2.begin();
 	for (int i = 0; i < n; i++, ++it)
