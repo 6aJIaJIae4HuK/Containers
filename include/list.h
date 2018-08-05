@@ -3,9 +3,12 @@
 #include <memory>
 #include <limits>
 #include <initializer_list>
+#include <functional>
 
 namespace blk
 {
+template<class InputIt>
+using IsInputIterator = typename std::enable_if<std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<InputIt>::iterator_category>::value>;
 
 template<class T>
 struct ListNode
@@ -46,17 +49,17 @@ public:
 	ListIterator operator++(int);
 	ListIterator operator--(int);
 
-	template<bool B = IsConst, typename Enabled = typename std::enable_if<!B, reference>::type>
-	Enabled operator*();
+	template<bool B = IsConst, typename EnabledType = typename std::enable_if<!B, reference>::type>
+	EnabledType operator*();
 
-	template<bool B = IsConst, typename Enabled = typename std::enable_if<B, reference>::type>
-	Enabled operator*() const;
+	template<bool B = IsConst, typename EnabledType = typename std::enable_if<B, reference>::type>
+	EnabledType operator*() const;
 
-	template<bool B = IsConst, typename Enabled = typename std::enable_if<!B, pointer>::type>
-	Enabled operator->();
+	template<bool B = IsConst, typename EnabledType = typename std::enable_if<!B, pointer>::type>
+	EnabledType operator->();
 
-	template<bool B = IsConst, typename Enabled = typename std::enable_if<B, pointer>::type>
-	Enabled operator->() const;
+	template<bool B = IsConst, typename EnabledType = typename std::enable_if<B, pointer>::type>
+	EnabledType operator->() const;
 
 	ListNode<value_type> * getNode();
 	ListNode<value_type> * const getNode() const;
@@ -82,12 +85,12 @@ public:
 	using const_pointer = typename std::allocator_traits<Allocator>::const_pointer;
 	using difference_type = std::ptrdiff_t;
 
+	// Constructors and destructor
 	list();
 	explicit list(const Allocator& alloc);
 	explicit list(size_type count, const value_type& value, const Allocator& alloc = Allocator());
 	explicit list(size_type count, const Allocator& alloc = Allocator());
-
-	template<class InputIt, typename Enabled = typename std::enable_if<std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<InputIt>::iterator_category>::value>>
+	template<class InputIt, typename Enabled = IsInputIterator<InputIt>>
 	list(InputIt first, InputIt last, const Allocator& alloc = Allocator());
 	list(const list& other);
 	list(const list& other, const Allocator& alloc);
@@ -96,34 +99,23 @@ public:
 	list(std::initializer_list<T> init, const Allocator& alloc = Allocator());
 	~list();
 
+	// Assignments and allocator getter
+	list& operator=(const list& other);
+	list& operator=(list&& other);
+	list& operator=(std::initializer_list<T> init);
+	void assign(size_type count, const T& value);
+	template<class InputIt, typename Enabled = IsInputIterator<InputIt>>
+	void assign(InputIt first, InputIt last);
+	void assign(std::initializer_list<T> init);
 	allocator_type get_allocator() const;
-	iterator insert(const_iterator pos, const value_type& value);
-	iterator insert(const_iterator pos, value_type&& value);
-	iterator insert(const_iterator pos, size_type count, const value_type& value);
 
-	template<class InputIt, typename Enabled = typename std::enable_if<std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<InputIt>::iterator_category>::value>>
-	iterator insert(const_iterator pos, InputIt first, InputIt last);
-
-	void push_front(const value_type& value);
-	void push_back(const value_type& value);
-	template<class... Args>
-	iterator emplace(const_iterator pos, Args&&... args);
-	template<class... Args>
-	reference emplace_back(Args&&... args);
-	template<class... Args>
-	reference emplace_front(Args&&... args);
-	iterator erase(const_iterator pos);
-	iterator erase(const_iterator first, const_iterator last);
-	void clear() noexcept;
-	void pop_back();
-	void pop_front();
-	void remove(const value_type& value);
-	template<class UnaryPredicate>
-	void remove_if(UnaryPredicate p);
-	value_type& front();
-	const value_type& front() const;
-	value_type& back();
-	const value_type& back() const;
+	// Element access
+	reference front();
+	const_reference front() const;
+	reference back();
+	const_reference back() const;
+	
+	// Iterators
 	iterator begin() noexcept;
 	const_iterator begin() const noexcept;
 	const_iterator cbegin() const noexcept;
@@ -136,12 +128,66 @@ public:
 	reverse_iterator rend() noexcept;
 	const_reverse_iterator rend() const noexcept;
 	const_reverse_iterator crend() const noexcept;
+
+	// Capacity
+	bool empty() const noexcept;
 	size_type size() const noexcept;
 	size_type max_size() const noexcept;
-	bool empty() const noexcept;
+
+	// Modifiers
+	void clear() noexcept;
+	iterator insert(const_iterator pos, const value_type& value);
+	iterator insert(const_iterator pos, value_type&& value);
+	iterator insert(const_iterator pos, size_type count, const value_type& value);
+	template<class InputIt, typename Enabled = IsInputIterator<InputIt>>
+	iterator insert(const_iterator pos, InputIt first, InputIt last);
+	iterator insert(const_iterator pos, std::initializer_list<T> init);
+	template<class... Args>
+	iterator emplace(const_iterator pos, Args&&... args);
+	iterator erase(const_iterator pos);
+	iterator erase(const_iterator first, const_iterator last);
+	void push_front(const value_type& value);
+	void push_front(value_type&& value);
+	void push_back(const value_type& value);
+	void push_back(value_type&& value);
+	template<class... Args>
+	reference emplace_back(Args&&... args);
+	template<class... Args>
+	reference emplace_front(Args&&... args);
+	void pop_back();
+	void pop_front();
+	void resize(size_type count);
+	void resize(size_type count, const value_type& value);
+	void swap(list& other);
+
+	// Operations
+	void merge(list& other);
+	void merge(list&& other);
+	template <class Compare>
+	void merge(list& other, Compare comp);
+	template <class Compare>
+	void merge(list&& other, Compare comp);
+	void splice(const_iterator pos, list& other);
+	void splice(const_iterator pos, list&& other);
+	void splice(const_iterator pos, list& other, const_iterator it);
+	void splice(const_iterator pos, list&& other, const_iterator it);
+	void splice(const_iterator pos, list& other, const_iterator first, const_iterator last);
+	void splice(const_iterator pos, list&& other, const_iterator first, const_iterator last);
+	void remove(const value_type& value);
+	template<class UnaryPredicate>
+	void remove_if(UnaryPredicate p);
+	void reverse() noexcept;
+	void unique();
+	template<class BinaryPredicate>
+	void unique(BinaryPredicate p);
+	void sort();
+	template<class Compare>
+	void sort(Compare comp);
+	
 private:
 	using node_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<ListNode<T>>;
 
+	void _unique(std::function<bool(const T& left, const T& right)> equalFunc);
 	ListNode<value_type>* allocateNode(ListNode<value_type>* prev, ListNode<value_type>* next);
 	ListNode<value_type>* allocateHeadNode();
 	ListNode<value_type>* insertNode(ListNode<value_type>* prev, ListNode<value_type>* next);
@@ -151,6 +197,22 @@ private:
 	ListNode<value_type>* m_headNode;
 	size_type m_size;
 };
+
+template<class T, class Alloc>
+bool operator==(list<T, Alloc>& left, list<T, Alloc>& right);
+template<class T, class Alloc>
+bool operator!=(list<T, Alloc>& left, list<T, Alloc>& right);
+template<class T, class Alloc>
+bool operator<(list<T, Alloc>& left, list<T, Alloc>& right);
+template<class T, class Alloc>
+bool operator<=(list<T, Alloc>& left, list<T, Alloc>& right);
+template<class T, class Alloc>
+bool operator>(list<T, Alloc>& left, list<T, Alloc>& right);
+template<class T, class Alloc>
+bool operator>=(list<T, Alloc>& left, list<T, Alloc>& right);
+
+template<class T, class Alloc>
+void swap(list<T, Alloc>& left, list<T, Alloc>& right);
 
 }
 

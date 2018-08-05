@@ -4,9 +4,25 @@ public:
 	TestClass() = delete;
 	explicit TestClass(int i) :
 		m_ptr(new int(i)) {}
+
 	TestClass(const TestClass& other)
 	{
 		assign(other);
+	}
+
+	TestClass(TestClass&& other) :
+		m_ptr(other.m_ptr)
+	{
+		other.m_ptr = nullptr;
+	}
+	
+	TestClass& operator=(TestClass&& other)
+	{
+		if (this == &other)
+			return *this;
+
+		m_ptr = other.m_ptr;
+		other.m_ptr = nullptr;
 	}
 
 	TestClass& operator=(const TestClass& other)
@@ -18,7 +34,8 @@ public:
 
 	~TestClass()
 	{
-		delete m_ptr;
+		if (m_ptr)
+			delete m_ptr;
 	}
 	
 	int getValue() const
