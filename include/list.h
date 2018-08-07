@@ -183,33 +183,34 @@ public:
 	void sort();
 	template<class Compare>
 	void sort(Compare comp);
-	
-private:
-	using node_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<ListNode<T>>;
 
-	void _unique(std::function<bool(const T& left, const T& right)> equalFunc);
-	ListNode<value_type>* allocateNode(ListNode<value_type>* prev, ListNode<value_type>* next);
-	ListNode<value_type>* allocateHeadNode();
-	ListNode<value_type>* insertNode(ListNode<value_type>* prev, ListNode<value_type>* next);
-	ListNode<value_type>* destroyNode(ListNode<value_type>* node);
+private:
+	using node_type = ListNode<T>;
+	using node_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<node_type>;
+
+	void unique_equal(std::function<bool(const T& left, const T& right)> equalFunc);
+	node_type* allocateNode(node_type* prev, node_type* next);
+	node_type* allocateHeadNode();
+	node_type* insertNode(node_type* prev, node_type* next);
+	node_type* destroyNode(node_type* node);
 
 	allocator_type m_alloc;
-	ListNode<value_type>* m_headNode;
+	node_type* m_headNode;
 	size_type m_size;
 };
 
 template<class T, class Alloc>
-bool operator==(list<T, Alloc>& left, list<T, Alloc>& right);
+bool operator==(const list<T, Alloc>& left, const list<T, Alloc>& right);
 template<class T, class Alloc>
-bool operator!=(list<T, Alloc>& left, list<T, Alloc>& right);
+bool operator!=(const list<T, Alloc>& left, const list<T, Alloc>& right);
 template<class T, class Alloc>
-bool operator<(list<T, Alloc>& left, list<T, Alloc>& right);
+bool operator<(const list<T, Alloc>& left, const list<T, Alloc>& right);
 template<class T, class Alloc>
-bool operator<=(list<T, Alloc>& left, list<T, Alloc>& right);
+bool operator<=(const list<T, Alloc>& left, const list<T, Alloc>& right);
 template<class T, class Alloc>
-bool operator>(list<T, Alloc>& left, list<T, Alloc>& right);
+bool operator>(const list<T, Alloc>& left, const list<T, Alloc>& right);
 template<class T, class Alloc>
-bool operator>=(list<T, Alloc>& left, list<T, Alloc>& right);
+bool operator>=(const list<T, Alloc>& left, const list<T, Alloc>& right);
 
 template<class T, class Alloc>
 void swap(list<T, Alloc>& left, list<T, Alloc>& right);

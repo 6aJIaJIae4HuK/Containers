@@ -1,7 +1,8 @@
 #include <exception>
 #include "../include/list.h"
 
-using namespace blk;
+namespace blk
+{
 
 class not_implemented : public std::exception
 {
@@ -566,7 +567,9 @@ void list<T, Allocator>::resize(size_type count, const value_type& value)
 template<class T, class Allocator>
 void list<T, Allocator>::swap(list& other)
 {
-	throw not_implemented();
+	std::swap(m_size, other.m_size);
+	std::swap(m_headNode, other.m_headNode);
+	std::swap(m_alloc, other.m_alloc);
 }
 
 template<class T, class Allocator>
@@ -654,11 +657,23 @@ void list<T, Allocator>::remove_if(UnaryPredicate p)
 template<class T, class Allocator>
 void list<T, Allocator>::reverse() noexcept
 {
-	throw not_implemented();
+	if (empty())
+		return;
+	node_type* head = m_headNode;
+	node_type* cur = head;
+	while (true)
+	{
+		node_type* next = cur->next;
+		cur->next = cur->prev;
+		cur->prev = next;
+		if (next == head)
+			break;
+		cur = next;
+	}
 }
 
 template<class T, class Allocator>
-void list<T, Allocator>::_unique(std::function<bool(const T& left, const T& right)> equalFunc)
+void list<T, Allocator>::unique_equal(std::function<bool(const T& left, const T& right)> equalFunc)
 {
 	if (size() <= 2)
 		return;
@@ -680,14 +695,14 @@ void list<T, Allocator>::_unique(std::function<bool(const T& left, const T& righ
 template<class T, class Allocator>
 void list<T, Allocator>::unique()
 {
-	_unique([](const T& left, const T& right) { return left == right; });
+	unique_equal([](const T& left, const T& right) { return left == right; });
 }
 
 template<class T, class Allocator>
 template<class BinaryPredicate>
 void list<T, Allocator>::unique(BinaryPredicate p)
 {
-	_unique([&p](const T& left, const T& right) { return !p(left, right) && !p(right, left); });
+	unique_equal([&p](const T& left, const T& right) { return !p(left, right) && !p(right, left); });
 }
 
 template<class T, class Allocator>
@@ -741,43 +756,67 @@ ListNode<typename list<T, Allocator>::value_type>* list<T, Allocator>::destroyNo
 }
 
 template<class T, class Allocator>
-bool operator==(list<T, Allocator>& left, list<T, Allocator>& right)
+bool operator==(const list<T, Allocator>& left, const list<T, Allocator>& right)
 {
-	throw not_implemented();
+	if (left.size() != right.size())
+		return false;
+	auto itLeft = left.begin();
+	auto itRight = right.begin();
+	while (itLeft != left.end() && itRight != right.end())
+	{
+		if (*itLeft != *itRight)
+			return false;
+		++itLeft;
+		++itRight;
+	}
+	return true;
 }
 
 template<class T, class Allocator>
-bool operator!=(list<T, Allocator>& left, list<T, Allocator>& right)
+bool operator!=(const list<T, Allocator>& left, const list<T, Allocator>& right)
 {
-	throw not_implemented();
+	return !(left == right);
 }
 
 template<class T, class Allocator>
-bool operator<(list<T, Allocator>& left, list<T, Allocator>& right)
+bool operator<(const list<T, Allocator>& left, const list<T, Allocator>& right)
 {
-	throw not_implemented();
+	auto itLeft = left.begin();
+	auto itRight = right.begin();
+	while (itLeft != left.end() && itRight != right.end())
+	{
+		if (*itLeft < *itRight)
+			return true;
+		if (*itRight < *itLeft)
+			return false;
+		++itLeft;
+		++itRight;
+	}
+	return itLeft == left.end() && itRight != right.end();
 }
 
 template<class T, class Allocator>
-bool operator<=(list<T, Allocator>& left, list<T, Allocator>& right)
+bool operator<=(const list<T, Allocator>& left, const list<T, Allocator>& right)
 {
-	throw not_implemented();
+	return !(right < left);
 }
 
 template<class T, class Allocator>
-bool operator>(list<T, Allocator>& left, list<T, Allocator>& right)
+bool operator>(const list<T, Allocator>& left, const list<T, Allocator>& right)
 {
-	throw not_implemented();
+	return right < left;
 }
 
 template<class T, class Allocator>
-bool operator>=(list<T, Allocator>& left, list<T, Allocator>& right)
+bool operator>=(const list<T, Allocator>& left, const list<T, Allocator>& right)
 {
-	throw not_implemented();
+	return !(left < right);
 }
 
 template<class T, class Allocator>
 void swap(list<T, Allocator>& left, list<T, Allocator>& right)
 {
-	throw not_implemented();
+	left.swap(right);
+}
+
 }
