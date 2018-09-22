@@ -193,6 +193,7 @@ private:
 	node_type* allocateHeadNode();
 	node_type* insertNode(node_type* prev, node_type* next);
 	node_type* destroyNode(node_type* node);
+	void sort(iterator& first, iterator& last, std::function<bool(const T& left, const T& right)> lessFunc);
 
 	allocator_type m_alloc;
 	node_type* m_headNode;
@@ -212,9 +213,12 @@ bool operator>(const list<T, Alloc>& left, const list<T, Alloc>& right);
 template<class T, class Alloc>
 bool operator>=(const list<T, Alloc>& left, const list<T, Alloc>& right);
 
-template<class T, class Alloc>
-void swap(list<T, Alloc>& left, list<T, Alloc>& right);
+}
 
+namespace std
+{
+	template<class T, class Alloc>
+	void swap(blk::list<T, Alloc>& left, blk::list<T, Alloc>& right);
 }
 
 #include "../src/list.cpp"

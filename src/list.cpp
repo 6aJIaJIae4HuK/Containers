@@ -388,7 +388,7 @@ template<class T, class Allocator>
 void list<T, Allocator>::clear() noexcept
 {
 	m_size = 0;
-	::ListNode<value_type>* node = m_headNode->next;
+	node_type *node = m_headNode->next;
 	while (node != m_headNode)
 		node = destroyNode(node);
 }
@@ -396,7 +396,7 @@ void list<T, Allocator>::clear() noexcept
 template<class T, class Allocator>
 typename list<T, Allocator>::iterator list<T, Allocator>::insert(const_iterator pos, const value_type& value)
 {
-	::ListNode<value_type> *node = insertNode(pos.getNode()->prev, pos.getNode());
+	node_type *node = insertNode(pos.getNode()->prev, pos.getNode());
 	std::allocator_traits<Allocator>::construct(m_alloc, &node->val, value);
 	m_size++;
 	return iterator(node);
@@ -439,7 +439,7 @@ template<class T, class Allocator>
 template<class... Args>
 typename list<T, Allocator>::iterator list<T, Allocator>::emplace(const_iterator pos, Args&&... args)
 {
-	::ListNode<value_type> *node = insertNode(pos.getNode()->prev, pos.getNode());
+	node_type *node = insertNode(pos.getNode()->prev, pos.getNode());
 	std::allocator_traits<Allocator>::construct(m_alloc, &node->val, std::forward<Args>(args)...);
 	m_size++;
 	return iterator(node);
@@ -708,14 +708,82 @@ void list<T, Allocator>::unique(BinaryPredicate p)
 template<class T, class Allocator>
 void list<T, Allocator>::sort()
 {
-	throw not_implemented();
+	sort([](const T& t1, const T& t2) { return t1 < t2; });
 }
 
 template<class T, class Allocator>
 template<class Compare>
 void list<T, Allocator>::sort(Compare comp)
 {
-	throw not_implemented();
+	iterator first = begin();
+	iterator last = end();
+	sort(first, last, comp);
+}
+
+template<class T, class Allocator>
+void list<T, Allocator>::sort(iterator& first, iterator& last, std::function<bool(const T& left, const T& right)> lessFunc)
+{
+	size_t size = 0;
+	iterator cur;
+	for (cur = first; cur != last; ++cur)
+		size++;
+	if (size < 2)
+		return;
+	cur = first;
+	for (size_t i = 0; i < size / 2; i++)
+		++cur;
+	sort(first, cur, lessFunc);
+	sort(cur, last, lessFunc);
+
+	node_type *nodeBeforeInterval = first.getNode()->prev;
+	node_type *nodeAfterInterval = last.getNode();
+	node_type *leftCurrent = first.getNode();
+	node_type *rightCurrent = cur.getNode();
+	node_type *lastSucceed = leftCurrent->prev;
+
+	lastSucceed->next = nullptr;
+	rightCurrent->prev->next = nullptr;
+	nodeAfterInterval->prev->next = nullptr;
+
+	while (leftCurrent != nullptr || rightCurrent != nullptr)
+	{
+		if (leftCurrent == nullptr)
+		{
+			rightCurrent->prev = lastSucceed;
+			lastSucceed->next = rightCurrent;
+			lastSucceed = rightCurrent;
+			rightCurrent = rightCurrent->next;
+		}
+		else
+		if (rightCurrent == nullptr)
+		{
+			leftCurrent->prev = lastSucceed;
+			lastSucceed->next = leftCurrent;
+			lastSucceed = leftCurrent;
+			leftCurrent = leftCurrent->next;
+		}
+		else
+		if (lessFunc(leftCurrent->val, rightCurrent->val))
+		{
+			leftCurrent->prev = lastSucceed;
+			lastSucceed->next = leftCurrent;
+			lastSucceed = leftCurrent;
+			leftCurrent = leftCurrent->next;
+		}
+		else
+		{
+			rightCurrent->prev = lastSucceed;
+			lastSucceed->next = rightCurrent;
+			lastSucceed = rightCurrent;
+			rightCurrent = rightCurrent->next;
+		}
+	}
+
+	lastSucceed->next = nodeAfterInterval;
+	nodeAfterInterval->prev = lastSucceed;
+
+	first = iterator(nodeBeforeInterval->next);
+	last = iterator(nodeAfterInterval);
 }
 
 template<class T, class Allocator>
@@ -813,8 +881,13 @@ bool operator>=(const list<T, Allocator>& left, const list<T, Allocator>& right)
 	return !(left < right);
 }
 
+}
+
+namespace std
+{
+
 template<class T, class Allocator>
-void swap(list<T, Allocator>& left, list<T, Allocator>& right)
+void swap(blk::list<T, Allocator>& left, blk::list<T, Allocator>& right)
 {
 	left.swap(right);
 }
