@@ -575,7 +575,7 @@ void list<T, Allocator>::swap(list& other)
 template<class T, class Allocator>
 void list<T, Allocator>::merge(list& other)
 {
-	throw not_implemented();
+
 }
 
 template<class T, class Allocator>
@@ -599,39 +599,101 @@ void list<T, Allocator>::merge(list&& other, Compare comp)
 }
 
 template<class T, class Allocator>
+void list<T, Allocator>::commonSplice(const_iterator pos, list& other)
+{
+	if (other.empty())
+		return;
+	node_type *posNode = pos.getNode();
+	node_type *beforePosNode = posNode->prev;
+	node_type *firstNode = other.begin().getNode();
+	node_type *lastNode = other.end().getNode()->prev;
+	beforePosNode->next = firstNode;
+	firstNode->prev = beforePosNode;
+	posNode->prev = lastNode;
+	lastNode->next = posNode;
+	m_size += other.size();
+
+	other.m_headNode->next = other.m_headNode;
+	other.m_headNode->prev = other.m_headNode;
+	other.m_size = 0;
+}
+
+template<class T, class Allocator>
+void list<T, Allocator>::commonSplice(const_iterator pos, list& other, const_iterator it)
+{
+	node_type *itNode = it.getNode();
+	itNode->prev->next = itNode->next;
+	itNode->next->prev = itNode->prev;
+	other.m_size--;
+
+	node_type *posNode = pos.getNode();
+	node_type *beforePosNode = posNode->prev;
+	beforePosNode->next = itNode;
+	itNode->prev = beforePosNode;
+	posNode->prev = itNode;
+	itNode->next = posNode;
+	m_size++;
+}
+
+template<class T, class Allocator>
+void list<T, Allocator>::commonSplice(const_iterator pos, list& other, const_iterator first, const_iterator last)
+{
+	// TODO: Replace to cyclic commonSplice(pos, other, it)
+	size_type size = 0;
+	for (const_iterator cur = first; cur != last; cur++)
+		size++;
+
+	node_type *posNode = pos.getNode();
+	node_type *beforePosNode = posNode->prev;
+	node_type *firstNode = first.getNode();
+	node_type *lastNode = last.getNode()->prev;
+
+	firstNode->prev->next = lastNode->next;
+	lastNode->next->prev = firstNode->prev;
+
+	beforePosNode->next = firstNode;
+	firstNode->prev = beforePosNode;
+	posNode->prev = lastNode;
+	lastNode->next = posNode;
+
+	m_size += size;
+	other.m_size -= size;
+}
+
+template<class T, class Allocator>
 void list<T, Allocator>::splice(const_iterator pos, list& other)
 {
-	throw not_implemented();
+	commonSplice(pos, other);
 }
 
 template<class T, class Allocator>
 void list<T, Allocator>::splice(const_iterator pos, list&& other)
 {
-	throw not_implemented();
+	commonSplice(pos, other);
 }
 
 template<class T, class Allocator>
 void list<T, Allocator>::splice(const_iterator pos, list& other, const_iterator it)
 {
-	throw not_implemented();
+	commonSplice(pos, other, it);
 }
 
 template<class T, class Allocator>
 void list<T, Allocator>::splice(const_iterator pos, list&& other, const_iterator it)
 {
-	throw not_implemented();
+	commonSplice(pos, other, it);
 }
 
 template<class T, class Allocator>
 void list<T, Allocator>::splice(const_iterator pos, list& other, const_iterator first, const_iterator last)
 {
-	throw not_implemented();
+	commonSplice(pos, other, first, last);
 }
 
 template<class T, class Allocator>
 void list<T, Allocator>::splice(const_iterator pos, list&& other, const_iterator first, const_iterator last)
 {
-	throw not_implemented();
+	commonSplice(pos, other, first, last);
 }
 
 template<class T, class Allocator>
@@ -715,30 +777,33 @@ template<class T, class Allocator>
 template<class Compare>
 void list<T, Allocator>::sort(Compare comp)
 {
-	iterator first = begin();
-	iterator last = end();
+	node_type* first = m_headNode->next;
+	node_type* last = m_headNode;
 	sort(first, last, comp);
 }
 
 template<class T, class Allocator>
-void list<T, Allocator>::sort(iterator& first, iterator& last, std::function<bool(const T& left, const T& right)> lessFunc)
+void list<T, Allocator>::sort(node_type*& first, node_type*& last, std::function<bool(const T& left, const T& right)> lessFunc)
 {
-	size_t size = 0;
-	iterator cur;
-	for (cur = first; cur != last; ++cur)
+	size_type size = 0;
+	node_type* cur = first;
+	while (cur != last)
+	{
 		size++;
+		cur = cur->next;
+	}
 	if (size < 2)
 		return;
 	cur = first;
 	for (size_t i = 0; i < size / 2; i++)
-		++cur;
+		cur = cur->next;
 	sort(first, cur, lessFunc);
 	sort(cur, last, lessFunc);
 
-	node_type *nodeBeforeInterval = first.getNode()->prev;
-	node_type *nodeAfterInterval = last.getNode();
-	node_type *leftCurrent = first.getNode();
-	node_type *rightCurrent = cur.getNode();
+	node_type *nodeBeforeInterval = first->prev;
+	node_type *nodeAfterInterval = last;
+	node_type *leftCurrent = first;
+	node_type *rightCurrent = cur;
 	node_type *lastSucceed = leftCurrent->prev;
 
 	lastSucceed->next = nullptr;
@@ -782,8 +847,8 @@ void list<T, Allocator>::sort(iterator& first, iterator& last, std::function<boo
 	lastSucceed->next = nodeAfterInterval;
 	nodeAfterInterval->prev = lastSucceed;
 
-	first = iterator(nodeBeforeInterval->next);
-	last = iterator(nodeAfterInterval);
+	first = nodeBeforeInterval->next;
+	last = nodeAfterInterval;
 }
 
 template<class T, class Allocator>

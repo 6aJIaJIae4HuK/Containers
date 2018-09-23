@@ -193,7 +193,10 @@ private:
 	node_type* allocateHeadNode();
 	node_type* insertNode(node_type* prev, node_type* next);
 	node_type* destroyNode(node_type* node);
-	void sort(iterator& first, iterator& last, std::function<bool(const T& left, const T& right)> lessFunc);
+	void commonSplice(const_iterator pos, list& other);
+	void commonSplice(const_iterator pos, list& other, const_iterator it);
+	void commonSplice(const_iterator pos, list& other, const_iterator first, const_iterator last);
+	void sort(node_type*& first, node_type*& last, std::function<bool(const T& left, const T& right)> lessFunc);
 
 	allocator_type m_alloc;
 	node_type* m_headNode;
